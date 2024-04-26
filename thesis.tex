@@ -23,24 +23,23 @@
 %\usepackage{showframe} % This package was just to see page margins
 \usepackage[english]{babel}
 \usepackage{blindtext}
+\input{annotations}
 \overfullrule5pt
 % ---
 
 % Required information
-\title{This is the Title of My Dissertation}
-\author{My Full Legal Name}
-\degree{My Degree Title}{Doctor of Philosophy/Doctor of Musical
-Arts/\par Doctor of Education}
+\title{Disaggregated Data Structures}
+\author{Stewart Steven Grant}
+\degree{Computer Science}{Doctor of Philosopy}
 % Each member of the committee should be listed as Professor Foo Bar.
 % If Professor is not the correct title for one, then titles should be
 % omitted entirely.
-\chair{Professor Eta Theta}
-\cochair{Professor Gamma Delta} % Optional
+\chair{Alex C. Snoeren}
 % Your committee members (other than the chairs) must be in alphabetical order
-\committee{Professor Lambda Kappa}
-\committee{Professor Iota Mu}
-\committee{Professor Epsilon Zeta}
-\degreeyear{2018}
+\committee{Amy Ousterhout}
+\committee{Yiying Zhang}
+\committee{George Papen}
+\degreeyear{2024}
 
 % Start the document
 \begin{document}
@@ -70,7 +69,8 @@ I want to while still keeping my headings and margins consistent.
 \vskip0pt plus.5fil
 \setsinglespacing
 {\flushright
-True ease in writing comes from art, not chance,\\
+True ease  -- in writing comes from art, not chance,\\
+\todo{Epligraph - quote from Candide}
 As those move easiest who have learn'd to dance.\\
 'T is not enough to no harshness gives offence,---\\
 The sound must seem an echo to the sense.
@@ -108,6 +108,7 @@ good enough writer he must face eternity, or the lack of it, each day.
 
 % Preface
 \begin{preface}
+\todo{Write a preface - take a look at some examples because it seems rather free form}
 Almost nothing is said in the manual about the preface. There is no
 indication about how it is to be typeset. Given that, one is forced to
 simply typeset it and hope it is accepted. It is, however, optional
@@ -118,28 +119,7 @@ and may be omitted.
 % use. See the examples here. In addition, each chapter ack needs to
 % be repeated at the end of the relevant chapter.
 \begin{acknowledgements}
-I would like to acknowledge Professor Eta Theta for his support as the
-chair of my committee. Through multiple drafts and many long nights,
-his guidance has proved to be invaluable.
-
-I would also like to acknowledge the ``Smith Clan'' of lab~28, without
-whom my research would have no doubt taken fives times as long. It is
-their support that helped me in an immeasureable way.
-
-Chapter 2, in full, is a reprint of the material as it appears in
-Numerical Grid Generational in Computational Fluid Mechanics~2009.
-Smith, Laura; Smith, Jane~D., Pineridge Press,~2009. The dissertation
-author was the primary investigator and author of this paper.
-
-Chapter 3, in part, has been submitted for publication of the material
-as it may appear in Education Mechanics,~2009, Smith, Laura; Smith,
-Jane~D., Trailor Press,~2009. The dissertation author was the primary
-investigator and author of this paper.
-
-Chapter 5, in part is currently being prepared for submission for
-publication of the material. Smith, Laura; Smith, Jane~D\@. The
-dissertation author was the primary investigator and author of this
-material.
+\todo{Write acknowledgements - take a look at audrey and alex}
 \end{acknowledgements}
 
 % Stupid vita goes next
@@ -147,46 +127,48 @@ material.
 \noindent
 \begin{cv}{}
 \begin{cvlist}{}
-\item[1996] Bachelor of Arts, University of California, Berkeley
-\item[1996--2000] U.S. Marines
-\item[2000--2002] Teaching Assistant, Department of Mechanical
-Engineering\\University of California, San Diego
-\item[2002--2006] Research Assistant, University of California, San
-Diego
-\item[2010] Doctor of Philosophy, University of California, San Diego
+\item[2012-2016] Bachelor of Science, Computer Science University of British Columbia
+\item[2016-2018] Master of Science, Computer Science University of British Columbia
+\item[2018-2024] Doctor of Philosophy, Computer Science University of California, San Diego
 \end{cvlist}
 \end{cv}
 
 % This puts in the PUBLICATIONS header. Note that it appears inside
 % the vita environment. It is optional.
 \publications
-\noindent``Distributions of Control Points in a System for Analysis of Stress
-Distribution'' IRE Transactions of the I.R.E\@. Professional Group on
-Automatic Control, vol. AC-7, pp 272--289, September 2005
+
+\noindent Deepak Bansal and Gerald DeGrace and Rishabh Tewari and Michal Zygmunt and James Grantham
+and Silvano Gai and Mario Baldi and Krishna Doddapaneni and Arun Selvarajan and Arunkumar Arumugam
+and Balakrishnan Raman and Avijit Gupta and Sachin Jain and Deven Jagasia and Evan Langlais and
+Pranjal Srivastava and Rishiraj Hazarika and Neeraj Motwani and Soumya Tiwari and Stewart Grant and
+Ranveer Chandra and Srikanth Kandula. 2023. Disaggregating Stateful Network Functions. In
+proceedings of 20th USENIX Symposium on Networked Systems Design and Implementation (NSDI 23).
+Usenix Association, Boston MA, USA, 1469--1487.
+https://www.usenix.org/conference/nsdi23/presentation/bansal \\
+
+\noindent Stewart Grant, Anil Yelam, Maxwell Bland, and Alex C. Snoeren. 2020. SmartNIC Performance
+Isolation with FairNIC: Programmable Networking for the Cloud. In Proceedings of the Annual
+conference of the ACM Special Interest Group on Data Communication on the applications,
+technologies, architectures, and protocols for computer communication (SIGCOMM '20). Association for
+Computing Machinery, New York, NY, USA, 681–693. https://doi.org/10.1145/3387514.3405895 \\
+
+\noindent Stewart Grant, Hendrik Cech, and Ivan Beschastnikh. 2018. Inferring and asserting
+distributed system invariants. In Proceedings of the 40th International Conference on Software
+Engineering (ICSE '18). Association for Computing Machinery, New York, NY, USA, 1149–1159.
+https://doi.org/10.1145/3180155.3180199 \\
+
+% \noindent 
+\todo{Ask alex if I should include any of the many preprints}
 
 % This puts in the FIELDS OF STUDY. Also inside vita and also
 % optional.
-\fieldsofstudy
-\noindent Major Field: Engineering (Specialization or Focused Studies)
-\vskip\baselineskip
-Studies in Applied Mathematics\par
-Professors Alpha Beta and Gamma Delta
-\vskip\baselineskip
-Studies in Mechanices\par
-Professors Epsilon Zeta and Eta Theta
-\vskip\baselineskip
-Studies in Electromagnetism\par
-Professors Iota Kappa and Lambda Mu
+% \fieldsofstudy
+% \noindent Major Field: Computer Science
 \end{vita}
 
 % Put your maximum 350 word abstract here.
 \begin{dissertationabstract}
-The Abstract begins here. The abstract is limited to 350 words for a
-doctoral dissertation. It should consist of a short statement of the
-problem, a brief explanation of the methods and procedures employed in
-generating the data, and a condensed summary of the findings of the
-study. The abstract may continute onto a second page if necessary. The
-text of the abstract must be double spaced.
+	\todo{big todo write the diseration abstract}
 \end{dissertationabstract}
 
 % This is where the main body of your dissertation goes!
@@ -194,41 +176,40 @@ text of the abstract must be double spaced.
 
 % Optional Introduction
 \begin{dissertationintroduction}
-This optional section is barely described in the OGS manual other than
-saying it is optional and that it appears in the table of contents
-between the Abstract and the first chapter.
-
-No formatting guidelines appear so presumably, it should be formatted
-like an ordinary chapter. It should appear after the
-\verb!\mainmatter! macro because it should start on page~1.
+	\todo{Big todo write the diseration introduction}
 \end{dissertationintroduction}
 
-\chapter{An ordinary page}
-The purpose of this page is to illustrate an ordinary page of text in
-a doctoral dissertation or master's thesis. All pages of the doctoral
-dissertation or master's thesis must be kept within the margins of
-1.5'' on the left, 1'' on the right, 1'' on the top and 1.25'' on the
-bottom. All text must be double spaced except as indicated below.
+\chapter{Background}
 
-It is recommended that to increase the margins as paper can shift in a
-printer and as some photocopiers tend to increase the image being
-copied.
+\todo{Write a background, This should consist of two parts, the first is going to be a description
+of memory systems, the scalability of memory and the bottle neck of recent memory systems. Second I
+will discuss networking technologies like RDMA and provide the background on why it's a
+transformative technology along with programable networking hardware. Finally I'll discuss
+disaggregation and the fundemental challenges that come with writing software for such an
+archetecture}
 
-The first line of each paragraph must be indented at least one 0.5''
-tab, as done here.
+\chapter{Swordbox: Accelerated Sharing of Disaggregated Memory}
 
-This text is intended to be a part of the dissertation, for a doctoral
-student, or the thesis if you are receiving a master's degree, and now
-a quote is included here:
-\begin{quote}
-All quotes of more than six lines, even though this one is not, are to
-be indented 0.5'' from the left and 0.5'' from the right. These longer
-quotes are to be single spaced. Don't forget to adjust for proper
-spacing after the last line of the quoted material.
-\end{quote}
-The rest of the paragraph would continue as so.
+\section{Overview}
 
-\chapter{Figures and Such}
+\todo{Example for the bibliograph, here is a cite to clover~\cite{clover}}
+
+\todo{Revise Swordbox and then paste it into this section}
+
+\chapter{Disaggregated Cuckoo Hashing}
+
+\section{Overview}
+
+\todo{paste in the rest of RCUCKOO}
+
+\chapter{Black Box Disaggregation}
+
+\section{Overview}
+\todo{finish up you writeup for a fall submission of BBD and paste it her}
+
+\chapter{Conclusion}
+
+\chapter{ Example Figures and such for formatting reference}
 This demonstrates how OGS wants figures and tables formatted. For
 figures, the caption goes below the figure and ``Figure'' is in bold.
 See Figure~\ref{fig:zen}. Tables are formatted with the caption above
@@ -355,13 +336,9 @@ Campus Planning. Analytical Studies and Space Planning\\
 \end{facingcaption}
 
 % This will give us some more text
-\Blinddocument
+% \Blinddocument
 
 % Skipping a bunch of chapters
-\setcounter{chapter}{50}
-\chapter{Another chapter}
-\setcounter{figure}{73}
-\setcounter{table}{88}
 \begin{figure}
 \centering
 \fbox{\hbox to.8\linewidth{\hss Another figure\hss}}
@@ -386,11 +363,11 @@ a&b&c\\
 \end{table}
 
 \appendix
-\Blinddocument
+% \Blinddocument
 
 % Stuff at the end of the dissertation goes in the back matter
 \backmatter
 \bibliographystyle{plain} % Or whatever style you want like plainnat
-\bibliography{references}
+\bibliography{paper}
 
 \end{document}
