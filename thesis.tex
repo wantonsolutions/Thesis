@@ -21,6 +21,7 @@
 %commands
 
 \newcommand{\sword}{SwordBox}
+\newcommand{\thesistitle}{Disaggregated Data Structures: Sharing and contention with RDMA and Programmable Networks}
 
 % OGS recommends increasing the margins slightly.
 \increasemargins{.1in}
@@ -35,7 +36,7 @@
 % ---
 
 % Required information
-\title{Disaggregated Data Structures}
+\title{\thesistitle}
 \author{Stewart Steven Grant}
 \degree{Computer Science}{Doctor of Philosopy}
 % Each member of the committee should be listed as Professor Foo Bar.
@@ -60,47 +61,46 @@
 \setsinglespacing
 \raggedright % It would be better to use \RaggedRight from ragged2e
 \parindent0pt\parskip\baselineskip
-In recognition of reading this manual before beginning to format the
-doctoral dissertation or master's thesis; for following the
-instructions written herein; for consulting with OGS Academic Affairs
-Advisers; and for not relying on other completed manuscripts, this
-manual is dedicated to all graduate students about to complete the
-doctoral dissertation or master's thesis.
 
-In recognition that this is my one chance to use whichever
-justification, spacing, writing style, text size, and/or textfont that
-I want to while still keeping my headings and margins consistent.
+\textit{To my inner circle -- Family, Loved ones and Friends. And to every belayer that caught me. Thanks for the proverbial and literal support.}
+
+
+% In recognition of reading this manual before beginning to format the
+% doctoral dissertation or master's thesis; for following the
+% instructions written herein; for consulting with OGS Academic Affairs
+% Advisers; and for not relying on other completed manuscripts, this
+% manual is dedicated to all graduate students about to complete the
+% doctoral dissertation or master's thesis.
+
+% In recognition that this is my one chance to use whichever
+% justification, spacing, writing style, text size, and/or textfont that
+% I want to while still keeping my headings and margins consistent.
 \end{dedication}
 % Optional
 \begin{epigraph}
 \vskip0pt plus.5fil
 \setsinglespacing
 {\flushright
-True ease  -- in writing comes from art, not chance,\\
-\todo{Epligraph - quote from Candide}
-As those move easiest who have learn'd to dance.\\
-'T is not enough to no harshness gives offence,---\\
-The sound must seem an echo to the sense.
 
+"If this is the best of possible worlds, what then are the others?"\\
 \vskip\baselineskip
-\textit{Alexander Pope}\par}
+-Voltaire \textit{Candide}\par}
+
 \vfil
 \begin{center}
-You write with ease to show your breeding,\\
-But easy writing's curst hard reading.
+
+\noindent “It must be considered that there is nothing more difficult to carry out, nor more
+doubtful of success, nor more dangerous to handle, than to initiate a new order of things.”
 
 \vskip\baselineskip
-\textit{Richard Brinsley Sheridan}
+\hskip0pt plus1fil -Niccolo Machiavelli \textit{The Prince}\hskip0pt plus4fil\null
+
 \end{center}
 \vfil
-\noindent Writing, at its best, is a lonely life. Organizations for
-writers palliate the writer's loneliness, but I doubt if they improve
-his writing. He grows in public stature as he sheds his loneliness and
-often his work deteriorates. For he does his work alone and if he is a
-good enough writer he must face eternity, or the lack of it, each day.
+"If every porkchop were perfect we wouldn't have hotdogs"\\
 
 \vskip\baselineskip
-\hskip0pt plus1fil\textit{Ernest Hemingway}\hskip0pt plus4fil\null
+-Greg Universe, \textit{Steven Universe}
 
 \vfil
 \end{epigraph}
@@ -126,7 +126,33 @@ and may be omitted.
 % use. See the examples here. In addition, each chapter ack needs to
 % be repeated at the end of the relevant chapter.
 \begin{acknowledgements}
-\todo{Write acknowledgements - take a look at audrey and alex}
+
+I would like to acknowledged my advisor Alex C. Snoeren for his dedication to his craft and guidance
+over the past 6 years. No piece of work within this thesis would be possible without your
+collaboration. I would also like to thank my committee members Amy Ousterhout, Yiying Zhang, and
+George Papen for their feedback and guidance, and Shrikanth Kandula for his mentorship during my
+time at MSR.
+
+This thesis has been extraordinarily influenced by Anil Yelam, my closest collaborator. Thank you
+for all the time you spent working on our collaborations, and the hours spent discussing and
+debating system designs and performance results. I'm forever grateful. To Maxwell Bland, your
+research energy is unmatched and without your help we would never have have acquired any SmartNICs.
+And Alex (Enze) Liu for his superior knowledge of Python and unmatched focus on research.  Thank you
+to all of the members of the Systems and Networking group at UCSD, especially the optical networking
+group for your feedback and guidance during the first years of my PhD.
+
+Thank you to Meta for funding my research and providing me with the opportunity to work on resource
+disaggregation, Cavium for the generous donation of two SmartNICs, and to ARPAe for funding my first
+years of research.
+
+I'd like to thank all of the members of 3140 for their collaboration and friendship over the years.
+It's truly the best office, Chez bob volunteers for keeping me fed, and to my friends for the
+support. Camille Rubel thanks for having the best climbing schedule in the world, Phillip Arndt for
+pushing my limits, and Camille Moore for keeping me on my toes.
+
+
+
+
 \end{acknowledgements}
 
 % Stupid vita goes next
@@ -164,8 +190,6 @@ distributed system invariants. In Proceedings of the 40th International Conferen
 Engineering (ICSE '18). Association for Computing Machinery, New York, NY, USA, 1149–1159.
 https://doi.org/10.1145/3180155.3180199 \\
 
-% \noindent 
-\todo{Ask alex if I should include any of the many preprints}
 
 % This puts in the FIELDS OF STUDY. Also inside vita and also
 % optional.
