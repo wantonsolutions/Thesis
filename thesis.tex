@@ -209,7 +209,7 @@ failure domain. In particular increased latency from network round trips dramati
 performance of existing shared data structures designed for local DRAM.
 %%
 In this thesis I explore the challenges of sharing disaggregated memory with hundreds of CPU cores.
-First in \sword I present a system which utilizes a centralized programmable switch to cache data
+First in {\sword} I present a system which utilizes a centralized programmable switch to cache data
 structure state and dramatically improve key-value workload performance. Second I present a new
 key-value store RCuckoo which is designed to leverage RDMA and reduce round trips when accessed by
 CPU's over a network. Finally I present Black Box Disaggregation, a system which enables arbitrary
@@ -227,12 +227,40 @@ data structures to be easily ported to the disaggregated setting.
 
 \chapter{Background}
 
-\todo{Write a background, This should consist of two parts, the first is going to be a description
-of memory systems, the scalability of memory and the bottle neck of recent memory systems. Second I
-will discuss networking technologies like RDMA and provide the background on why it's a
-transformative technology along with programable networking hardware. Finally I'll discuss
-disaggregation and the fundemental challenges that come with writing software for such an
-archetecture}
+Calls for distributed memory systems have been made for decades, and the groundwork of
+disaggregation relies heavily on the work of the past~\cite{treadmarks,gms}. However, disaggregation
+differs from prior distributed systems due to it's differences in scale, and system assumptions.
+It's primary difference is the assumption that each resource be stand alone, and paired with
+miniscule or no compute power, save for resources like CPUs an GPUs which are inherently compute.
+This assumption transforms the technologies and requirements for disaggregated systems. Critically
+Remote Direct Memory Access (RDMA) (or similar CPU bypass technology) is essential in constructing a
+passive storage system. Simultaneously in-network line rate processing of user defined functions is
+now commonly available in a variety of network devices. The intersection of passive storage,
+massively concurrent compute, and programmable networks set a unique landscape for the design of
+disaggregated systems.
+
+\section{Disaggregation}
+
+As with many paradigm shifts within the systems community the idea of disaggregation is born from
+shifting hardware trends. Per core access to memory has been decreasing for decades. CPU core counts
+have consistently increased for over a decade while memory speeds and capacity have improved
+comparatively slowly~\todo{cite memory chart}. The result is that CPU cores have less access to
+memory now than 10 years ago. Memory is now an increasingly scarce resource and data center
+operators are exploring new ways to achieve better memory utilization. Disaggregation is one such
+option. Monolithic servers have a fixed amount of RAM per machine which, at a data center level leads
+to a skewed distributed of memory utilization. Some servers are starving for memory while others
+have gigabytes to spare. This spare (stranded) memory is the target of disaggregation, it aims to
+give each server access to a shared pool of RAM. In general a disaggregated resource, be it memory,
+FPGA's, or the network itself, can be provisioned for the peak-of-sums, rather than monolithic
+resources which are provisioned for the sum-of-peaks~\cite{clio,supernic,dsnf}.
+
+\section{RDMA}
+
+\section{Programable Networks}
+
+\section{Disaggregated Data Structures}
+
+
 
 \chapter{Swordbox: Accelerated Sharing of Disaggregated Memory}
 
