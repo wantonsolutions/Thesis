@@ -11,9 +11,16 @@
 \usepackage{microtype}
 \usepackage[breaklinks=true,pdfborder={0 0 0}]{hyperref}
 \usepackage{graphicx}
+\usepackage{subcaption}
+\usepackage{amsmath}
+\usepackage{enumitem}
 \AtBeginDocument{%
 	\settowidth\cvlabelwidth{\cvlabelfont 0000--0000}%
 }
+
+%commands
+
+\newcommand{\sword}{SwordBox}
 
 % OGS recommends increasing the margins slightly.
 \increasemargins{.1in}
@@ -190,6 +197,14 @@ archetecture}
 
 \chapter{Swordbox: Accelerated Sharing of Disaggregated Memory}
 
+\input{swordbox/intro}
+\input{swordbox/backv2}
+\input{swordbox/tmp_sigcomm}
+\input{swordbox/implementation}
+\input{swordbox/eval}
+\input{swordbox/limitations}
+\input{swordbox/conclusion}
+
 \section{Overview}
 
 \todo{Example for the bibliograph, here is a cite to clover~\cite{clover}}
@@ -197,10 +212,14 @@ archetecture}
 \todo{Revise Swordbox and then paste it into this section}
 
 \chapter{Disaggregated Cuckoo Hashing}
-
-\section{Overview}
-
-\todo{paste in the rest of RCUCKOO}
+\input{rcuckoo/intro}
+\input{rcuckoo/background}
+\input{rcuckoo/body}
+%\input{problems}
+\input{rcuckoo/design}
+\input{rcuckoo/evaluation}
+%\input{limitation}
+\input{rcuckoo/conclusion}
 
 \chapter{Black Box Disaggregation}
 
@@ -368,6 +387,7 @@ a&b&c\\
 % Stuff at the end of the dissertation goes in the back matter
 \backmatter
 \bibliographystyle{plain} % Or whatever style you want like plainnat
-\bibliography{paper}
+
+\bibliography{swordbox/paper, rcuckoo/paper}
 
 \end{document}

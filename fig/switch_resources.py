@@ -1,0 +1,1 @@
+../swordbox/fig/switch_resources.py

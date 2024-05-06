@@ -1,0 +1,1 @@
+../swordbox/fig/bandwidth_reduction.py
