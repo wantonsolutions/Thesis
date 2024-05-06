@@ -149,8 +149,7 @@ I'd like to thank all of the members of 3140 for their collaboration and friends
 It's truly the best office, Chez bob volunteers for keeping me fed, and to my friends for the
 support. Camille Rubel thanks for having the best climbing schedule in the world, Phillip Arndt for
 pushing my limits, and Camille Moore for keeping me on my toes.
-
-
+\todo{double check I thanked everyone}
 
 
 \end{acknowledgements}
@@ -198,8 +197,24 @@ https://doi.org/10.1145/3180155.3180199 \\
 \end{vita}
 
 % Put your maximum 350 word abstract here.
-\begin{dissertationabstract}
-	\todo{big todo write the diseration abstract}
+\begin{dissertationabstract} 
+%%	
+Resource disaggregation proposes a next-generation architecture for data center resources. System
+components like compute, memory, storage, and accelerators are separated from one another by a fast
+network and composed dynamically into virtual servers when required. This paradigm promises
+dramatically improved resource utilization, scalability, and flexibility, but introduces dramatic
+challenges in terms of performance and fault tolerance. Memory is among the most difficult resources
+to disaggregate. CPUs currently expect DRAM to ultra low latency, high bandwidth, and to share it's
+failure domain. In particular increased latency from network round trips dramatically shifts the
+performance of existing shared data structures designed for local DRAM.
+%%
+In this thesis I explore the challenges of sharing disaggregated memory with hundreds of CPU cores.
+First in \sword I present a system which utilizes a centralized programmable switch to cache data
+structure state and dramatically improve key-value workload performance. Second I present a new
+key-value store RCuckoo which is designed to leverage RDMA and reduce round trips when accessed by
+CPU's over a network. Finally I present Black Box Disaggregation, a system which enables arbitrary
+data structures to be easily ported to the disaggregated setting.
+
 \end{dissertationabstract}
 
 % This is where the main body of your dissertation goes!
