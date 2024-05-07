@@ -264,11 +264,63 @@ high relative to the network. In concrete terms intra rack RDMA ping latencies a
 is a single digit percentage or less~\cite{decible}\todo{go back and get more citations}. In
 contrast DRAM latencies are 50-100ns. DRAM over RDMA has a nearly 20x overhead compared to local
 access. Despite this overhead RDMA is one of the strongest contenders for a disaggregated transport.
-CXL is a burgeoning technology which promises NUMA like latencies for remote memory access~\cite{cxl}
+CXL is a burgeoning technology which promises NUMA like latencies for remote memory
+access~\cite{cxl}. At the time of writing CXL is not widely available and it's performance and
+scalability are not well understood. Regardless of interconnect the principle of access latency
+remains the same. This thesis focuses on RDMA although we see the algorithms and data structures
+presented here to be largely interconnect independent.
+
 
 \section{RDMA}
 
-\subsection{CXL}
+Remote direct memory access (RDMA) is a low latency, high bandwidth network protocol. It achieves
+high performance by bypassing multiple overheads common to a traditional networking stack (ex Linux
+Sockets). Firstly RDMA is a kernel bypass technology. It allows user space applications to directly
+interact with the network interface card (NIC). This removes two distinct overheads, context
+switching and data copy to the kernel. Second, RDMA's most distinguishing feature is that it
+offloads much of the network stack to the NIC hardware, and bypasses the CPU entirely for data
+transfer. As an example, in a traditional networking stack if a process sends a UDP message on an
+existing socket the user first marshals the data and then submits it to the kernel via a
+\textit{send}. The kernel then copies the data out of user space, sets up the packet header, and
+submits the packet to the NIC. In contrast with RDMA the user space application registers a region
+of memory with the NIC prior to sending data. If an application wants to transfer the data in that
+region to a remote machine it passes a pointer to the data, and the data's size to the NIC along
+with the remote machines's address, and the action the NIC should take (read, write, ect). The
+application sends by calling a special \textit{rdma send}. This operation is non-blocking and sends
+a signal to the NIC which then DMA's the memory out of the processes address space, constructs a
+packet on the NIC (including managing transport state) and sends directly to another machine. The
+receiving NIC (in the case of a write), issues the DMA to the remote machine's memory without ever
+interacting with it's CPU.  The example above is only a high level overview of an RDMA write, the
+RDMA protocol is deeply complex. The current infiniband RDMA specification is over 1700
+pages~\cite{infiniband-spec}. In this section I will briefly cover the most important aspects of
+RDMA for the purposes of this thesis.
+
+\textit{One-Sided Verbs}
+
+The RDMA specification provides 5 service types (Reliable Connection, Unreliable Connection,
+Reliable Datagram, Unreliable Datagram, RAW Datagram). Additionally RDMA provides \textit{Verbs}
+actions the NIC can take, which vary by service type. Reliable services provide acknowledgements and
+connection services provide sequence numbers, in-order delivery, and retransmission. Service type
+determines which verbs are available for use. Reliable connections provide the strongest guarantees
+and allow for the use of \textit{one-sided} verbs which implement memory-like semantics. One sided
+verbs entirely bypass the CPU of the remote machine and allow a client to directly read, write, and
+atomically modify the remote hosts memory. This ability makes RDMA a powerful tool for designing
+disaggregated systems, especially memory systems as it allows designers to build with the assumption
+that memory is passive i.e no remote CPU exists. This prototyping ability is quintessential for
+understanding how future disaggregated systems will perform.
+
+The memory semantics of one sided RDMA are complex. Not all verbs respect ordering even on the same
+connection. RDMA provides a variety of configurations to gain ordering both on and across
+connections. Queue pairs (QPs) are connection handles for RDMA. Verbs are issued on a QP and QP are
+polled for responses. QP's provided in-order delivery, but not necessarily in-order completion. For
+instance issuing a read prior to a write may see the results of the write. Across QP no ordering is
+guaranteed by default. RDMA provides two atomic operations compare and swap (CAS) and fetch and add
+(FAA) for atomic modification of 64 bit regions of remote memory. The RDMA advanced transport
+supports masked versions of these operations to allow for high density atomic regions while reducing
+contention~\cite{rdma-masked-cas}. These atomic operations are the critical component for building
+shared disaggregated systems. They enable the construction of locks and semaphores, as well as
+lock-free data structures.
+
 
 \section{Programable Networks}
 
