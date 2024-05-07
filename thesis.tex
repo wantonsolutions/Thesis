@@ -254,7 +254,21 @@ give each server access to a shared pool of RAM. In general a disaggregated reso
 FPGA's, or the network itself, can be provisioned for the peak-of-sums, rather than monolithic
 resources which are provisioned for the sum-of-peaks~\cite{clio,supernic,dsnf}.
 
+The biggest barrier to disaggregation is network latency, and more aptly the difficulty of
+disaggregating a resource is proportional it's access latency with respect to the additional latency
+of the network. Disaggregated storage is a foregone conclusion. Academias and industry have pooled
+SSD's and HDD's into shared storage pools for their increased capacity and lower cost. This is
+relatively easy in comparison to an accelerator, or memory as the access cost of storage is already
+high relative to the network. In concrete terms intra rack RDMA ping latencies are on the order of
+1-2 us. HDD latencies are 10-20ms and SSD are often 100's of us. In these cases the network overhead
+is a single digit percentage or less~\cite{decible}\todo{go back and get more citations}. In
+contrast DRAM latencies are 50-100ns. DRAM over RDMA has a nearly 20x overhead compared to local
+access. Despite this overhead RDMA is one of the strongest contenders for a disaggregated transport.
+CXL is a burgeoning technology which promises NUMA like latencies for remote memory access~\cite{cxl}
+
 \section{RDMA}
+
+\subsection{CXL}
 
 \section{Programable Networks}
 
