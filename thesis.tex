@@ -354,7 +354,47 @@ computation. As an example a network sequencer which gives a unique monotonic se
 each packet is ideal as it requires only a few small amount of storage space, and limited amount of
 computation per packet.
 
-\section{Disaggregated Data Structures}
+\section{Disaggregated Systems and Data Structures}
+
+The trends and technologies discussed in the above sections have lead to a new class of system for
+disaggregation. These systems are built with the assumption that resources are separated by a fast
+network and have little to no heterogeneity. I.e a storage server will be prominently storage which
+minimal compute to boot and configure the machine and execute simple management
+tasks~\cite{aguilera2019designing,fast-networks,dis-and-app,legoos}.
+
+Disaggregated memory is the focus of many systems. A common model for disaggregated memory is the
+same as GMS with the exception that memory is passive and not part of a workstation pool~\cite{gms},
+that is remote memory can be used as a swap space or as a remote cache rather than disk. In this
+model applications are apportioned a partition of remote memory for it's
+pages~\cite{infiniswap,fastswap,leap,blade-server,legoos,hydra}, objects~\cite{aifm,carbink}, or
+cache lines~\cite{kona}. These systems focus on improving performance by reducing the number of
+remote memory accesses that an application has to make. In general this is done by identifying hot
+and cold memory then prefetching and evicting data to reduce the number of faults to remote memory.
+Additionally these systems focus on fault-tolerance by replicating or erasure coding memory across
+replicated memory servers~\cite{hydra}.
+
+A commonality between each of these memory systems is the lack of sharing. Operations common to
+non-disaggregated systems like mmapping a shared page are not supported by these systems. In cases
+where shared access is supported using POSIX interfaces performance is not considered to be a
+concern~\cite{Regions}. Disaggregated systems that share efficiently, at the time of writing, are
+entirely custom built data structures, the majority of which are key-value stores, transaction
+processors or caches~\cite{clover, sherman, race, fusee, rolex, ford, ditto}. Each of these system
+takes on a significant burden in terms of development. Most develop their own fault tolerance,
+replication, recovering, allocation, and serialization protocols. In nearly every case the
+performance of these systems is determined by the techniques used to serialize writes on the index
+of the data structure.
+%%
+The techniques used by these systems is largely the same as those used to design RDMA key-value
+stores for non-disaggregated memory over the past decade~\cite{pilaf,cell,herd,farm}. The primary
+difference is that disaggregated systems use exclusively one sided RDMA operations, while RDMA
+key-value stores typically route write operations through a CPU to serialize requests.
+%%
+A few systems have proposed to or realized the potential of using a programmable switch, or NIC in a
+disaggregated rack to aid in serialization. Notably MIND~\cite{mind} implements memory management on
+a switch, while Clio~\cite{clio} and SuperNIC~\cite{supernic} use an FPGA based smartNIC to
+implement any number of memory side network functions.
+
+
 
 
 
