@@ -295,7 +295,7 @@ RDMA protocol is deeply complex. The current infiniband RDMA specification is ov
 pages~\cite{infiniband-spec}. In this section I will briefly cover the most important aspects of
 RDMA for the purposes of this thesis.
 
-\textit{One-Sided Verbs}
+\subsection{One-Sided Verbs}
 
 The RDMA specification provides 5 service types (Reliable Connection, Unreliable Connection,
 Reliable Datagram, Unreliable Datagram, RAW Datagram). Additionally RDMA provides \textit{Verbs}
@@ -324,11 +324,42 @@ lock-free data structures.
 
 \section{Programable Networks}
 
+The past decade has seen the rise of programmable network devices. These devices are capable of
+executing users code often at line rate. A huge variety of devices exist: SmartNICs~\cite{fairnic},
+DPUs, FPGAs, and programmable switches~\cite{p4} from a wide variety of vendors. Often these devices
+provide thin operating systems which allow users to develop and deploy code, either C or P4. These
+programmable devices are powerful and transformational tools for designing network systems as they
+can offer orders of magnitude performance improvements when deployed in the right
+context~\cite{when-computer}, such as sequencing where it has show to offer huge benefits for
+consensus~\cite{eris, nopaxos}. In this thesis we leverage the power of programmable switches to
+exactly this benefit to get fast in-network serialization for RDMA based data structures (Section
+~\ref{chap:swordbox}).
+
+Programmable switches differ from other programmable network devices in that they have orders of
+magnitude more aggregate bandwidth, specific pipeline architecture, and exclusively operate on P4
+programs.
+%%
+Programmable switches such as Intel Tofino~\cite{tofino2} utilize a pipeline architecture. Switches
+typically have an ingress and egress pipeline which is broken into multiple stages. In the case of
+Tofino 2 both ingress and egress have 12 stages. Packets pass through one or more stages and are set
+for transmission once each stage of the pipeline used by the program has executed. Per stage
+computation is limited, usually to a few instructions, such a fetching from a lookup table
+processing a conditional, or modifying and storing packet header data. The result is that P4
+programs have a constrained programming model. Loops and recursion are not easily supported and
+branching is limited. Finally switch memory is highly constrained per pipeline stage. All P4
+accessible memory is SRAM of which each switch only has a few megabytes.
+%%
+Ideal programs for programmable switches provide a high degree of benefit from a small amount of
+computation. As an example a network sequencer which gives a unique monotonic sequence number to
+each packet is ideal as it requires only a few small amount of storage space, and limited amount of
+computation per packet.
+
 \section{Disaggregated Data Structures}
 
 
 
 \chapter{Swordbox: Accelerated Sharing of Disaggregated Memory}
+\label{chap:swordbox}
 
 \input{swordbox/intro}
 \input{swordbox/backv2}
