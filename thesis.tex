@@ -207,13 +207,13 @@ challenges in terms of performance and fault tolerance. Memory is among the most
 to disaggregate. CPUs currently expect DRAM to ultra low latency, high bandwidth, and to share it's
 failure domain. In particular increased latency from network round trips dramatically shifts the
 performance of existing shared data structures designed for local DRAM.
-%%
+
 In this thesis I explore the challenges of sharing disaggregated memory with hundreds of CPU cores.
 First in {\sword} I present a system which utilizes a centralized programmable switch to cache data
 structure state and dramatically improve key-value workload performance. Second I present a new
 key-value store RCuckoo which is designed to leverage RDMA and reduce round trips when accessed by
-CPU's over a network. Finally I present Black Box Disaggregation, a system which enables arbitrary
-data structures to be easily ported to the disaggregated setting.
+CPU's over a network. Both systems demonstrate significant performance improvements over the
+existing state of the art.
 
 \end{dissertationabstract}
 
@@ -223,44 +223,47 @@ data structures to be easily ported to the disaggregated setting.
 % Optional Introduction
 \begin{dissertationintroduction}
 
-Modern data center operators are fighting tooth and claw for efficiency. In prior decades due to
-Moors law and Dennard scaling data center operators to simply wait for the next generation of
-hardware to arrive for higher performance at lower monetary and energy costs. Both trends have
-slowed down dramatically -- CPU clock speeds and memory density, while still improving, have
-comparatively stagnated. The result is new technologies to fill the gap, rather than frequency
-scaling CPU's are scaling out and have become monstrously parallel, and common performance critical
-applications are being offloaded to accelerators like GPU's, TPU's, DPU's, SmartNICs and FPGA's.
-Memory is now increasingly tiered with the advent of NVM, persistent memory, and far memory. 
-
-What should a data center server look like? 20 years ago an operator may have argued for the
-simplicity of homogeneity, arguing for a carefully picked set of price and performance optimal
-components for a few thousand servers, perhaps with some skew for storage servers. Today that same
-operator probably could not name every kind of server in their data center. At the time of writing
-EC2 has 84 listed instance types~\cite{ec2-offer} for their customers to design their services. The
-trend is clear, in search of efficiency data center and server design is increasingly heterogeneous
-with servers being designed for specific applications and workloads.
-
-DRAM in particular has quickly become a precious resource in the data center. Main memory capacity,
-while growing has not kept up with CPU core counts. The result is that per-core memory capacity is
-less than 10 years ago~\cite{micron-memorywall}. New memory tiers like NVM and persistent memory
-have been introduced to help alleviate memory pressure from applications, but the composition of
-these memory tiers, and the software to manage them are still undecided.
+\textit{What should a data center server look like?} 20 years ago a data center operator may have
+argued for the simplicity of homogeneity over optimal performance, reasoning that carefully picked
+hardware at a given price point would yield the best cost-performance tradeoffs and that the
+performance yields of next generation hardware would quickly erase any gains made by specializing
+servers. 
+%%
+Since then both Moors law and Dennard scaling have slowed down dramatically. CPU clock speeds and
+memory density improvements have stagnated leaving operators to fight tooth and claw to enjoy the
+efficiency gains of prior decades. The effect is that new technologies are being introduced to to
+achieve scaling.  CPU's are now monstrously parallel. custom accelerators are common for common
+workloads like video coding, and machine learning. Indeed the modern datacenter is a hodgepodge of
+heterogeneous hardware (GPU's, TPU's, DPU's, SmartNICs and FPGA's)~\cite{nitro}, and various new
+memory offerings and tiers like NVMe. Today the same operator that argued for homogeneity would
+likely be unable to name every kind of server in their data center. At the time of writing EC2 has
+84 listed instance types~\cite{ec2-offer} for their customers to design their services. The trend is
+clear, in search of efficiency data center and server design is increasingly heterogeneous with
+servers being designed for specific applications and workloads.
 
 Resource disaggregation is a new architectural paradigm for data center resources aimed at improving
 efficiency and managing increased heterogeneity. In the disaggregated model a servers resources do
 not monolithic reside in a 1, 2, or 4U server form factor, instead each resource i.e compute,
 memory, storage is dedicated to a single machine and interconnected via a fast network. Servers are
 composed dynamically from these resources which enables them to be provisioned for their exact
-purpose. This model enables resource pooling and sharing which in turn leads to higher efficiency. 
+purpose. This model enables resource pooling and sharing which in turn leads to higher efficiency.
 
-The benefits of pooling are clear when examining a simple bin packing problem. Consider 2 servers
-both provisioned with 4GB of DRAM and 3 jobs each of which requires 2.5GB of memory. In a monolithic
-design a scheduler can only place one job per machine or risk swapping to disk. In a disaggregated
-model the 4GB of memory would be placed in an 8GB pool which could easily subdivided into 3 2.5GB
-partitions. In the monolithic case the unused memory is stranded, pooling reclaims stranded memory.
-More concretely at datacenter levels practitioners have to provision their servers for the sum of
-peak demand, when resources are pooled they can be provisioned for the peak of the sum of demand
-which can be significantly lower~\cite{supernic, dsnf}.
+% DRAM in particular has quickly become a precious resource in the data center. Main memory capacity,
+% while growing has not kept up with CPU core counts. The result is that per-core memory capacity is
+% less than 10 years ago~\cite{micron-memorywall}. New memory tiers like NVMe have been introduced to
+% help alleviate memory pressure from applications, but the composition of these memory tiers, and the
+% software to manage them are still undecided.
+
+DRAM in particular has become a precious resource in data centers and is a focused target for
+resource pooling~\cite{micron-memorywall}. The benefits of pooling are clear when examining a
+simple bin packing problem. Consider 2 servers both provisioned with 4GB of DRAM and 3 jobs each of
+which requires 2.5GB of memory. In a monolithic design a scheduler can only place one job per
+machine or risk swapping to disk. In a disaggregated model the 4GB of memory would be placed in an
+8GB pool which could easily subdivided into 3 2.5GB partitions. In the monolithic case the unused
+memory is stranded, pooling reclaims stranded memory.  More concretely at datacenter levels
+practitioners have to provision their servers for the sum of peak demand, when resources are pooled
+they can be provisioned for the peak of the sum of demand which can be significantly
+lower~\cite{supernic, dsnf}.
 
 The enabling technology for disaggregation is a fast network. Network capacities continue to grow,
 current commodity NICs offer 400Gbps of bandwidth, and Terabit ethernet is on the horizon.
@@ -282,11 +285,16 @@ both required and expensive, and handing failures between remote memory and CPU'
 concern.
 
 This thesis explores the design of shared data structures in disaggregated memory systems.  I
-present the design and implementation of two systems designed for disaggregated memory and with
-sharing and contention reduction as a core concern. The first system {\sword} is a middlebox
-approach for removing contention from shared data structures. The high level insight behind {\sword}
-is to leverage the fact that at rack-scale TORs have a serialized view of traffic to and from
-servers. Using this idea {\sword} caches data structure state on a programmable switch 
+present two systems ({\sword} and RCuckoo) which focus on the challenges of sharing and contending
+access to remote memory. {\sword} is a middlebox approach for removing contention from shared data
+structures. The high level insight behind {\sword} is to leverage the fact that at rack-scale TORs
+have a serialized view of traffic to and from servers. Using this idea {\sword} caches data
+structure state on a programmable switch. Second I present RCuckoo a fully disaggregated key-value
+which is designed to improve data locality and reduce the number of network round trips required to
+access data. {\sword} yields orders of magnitude improvements in both throughput (up to 30x) and
+tail latency (up to 300x).  RCuckoo meets or exceeds the performance of all state of the art
+disaggregated key-value stores on small key-value pairs and significantly outperforms other systems
+on read-mostly workloads.
 
 \end{dissertationintroduction}
 
@@ -474,11 +482,6 @@ implement any number of memory side network functions.
 \input{swordbox/limitations}
 \input{swordbox/conclusion}
 
-\section{Overview}
-
-\todo{Example for the bibliograph, here is a cite to clover~\cite{clover}}
-
-\todo{Revise Swordbox and then paste it into this section}
 
 \chapter{Disaggregated Cuckoo Hashing}
 \input{rcuckoo/intro}
