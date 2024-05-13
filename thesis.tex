@@ -393,6 +393,30 @@ shared disaggregated systems. They enable the construction of locks and semaphor
 lock-free data structures.
 
 \section{CXL}
+
+RDMA is not the only proposal for disaggregated memory. The Compute Express Link (CXL) is a new
+interconnect and standard supported by chip manufacturers and hyperscalers. CXL is built on PCIe and
+aims to expand CPU memory capacity by allowing for the attachment of remote memory devices. Despite
+only a few CXL devices being available at the time of writing the technology is promising. Initial
+work has shown that CXL latencies for remote memory devices are between 2-5x the latency of local
+memory demonstrating that CXL devices can provide lower latency and higher throughput than
+RDMA~\cite{cxl-demyst}. Given these promising results we expect that CXL will be a strong contender
+for remote memory. \todo{add tpp and pond}
+
+CXL has some limitations that are not present in RDMA, specifically surrounding how memory is
+shared. CXL provides cache coherent memory semantics, however the expected cost of coherence similar
+to NUMA coherence will be high. Second CLX does not currently support a routing layer which limits
+it to rack scale deployments. Finally CXL does not, at the time of writing, support in-network
+programmability. As we will show in our work in Chapter~\ref{chap:swordbox} in-network
+programmability is a powerful tool for reducing contention in shared data structures, the lack of
+any programmable devices in network may limit the ability to effectively share CXL devices. Prior
+work on remote memory data structures indicated that allowing CPU cores to subscribe to \textit{notify} groups could reduce the price of coherence while enabling fast shared structures~\cite{aguilera2019designing}
+
+
+\todo{list of citations}
+Citations - Numbers~\cite{cxl-demyst}
+Facebook - tpp~\cite{tpp}
+Microsoft - pond~\cite{pond}
 \todo{Write a bit about CXL and how it relates to the RDMA memory model}
 
 
@@ -467,10 +491,9 @@ in the following section we found that the switch was an untenable solution.
 
 The values in Figure~\ref{fig:switch-cache-model} assume 64 clients and a single memory server and a
 log entry size of 8 bytes. The 0\% hit rate on cache sizes of 1024 is almost identical to the
-furthest left point in Figure~\ref{fig:scalability}(c) with 64 clients and a single memory node.
+furthest left point in Figure~\ref{fig:bandwidth-model} with 64 clients and a single memory node.
 Note that with this cache size and a hit rate of 95\% which may be attainable considering the log
-access patterns are extremely predictable we are able to handle around 200 Million ops per second,
-nearly the same as achieved by a 4 client setup.
+access patterns are extremely predictable we are able to handle around 200 Million ops per second.
 
 Unfortunately current programmable switch hardware does not allow for cashable objects over 192
 bytes. Our Tofino 2 switch has a fixed sized 64 bit maximum storage capacity at each stage of it's
@@ -483,11 +506,14 @@ programmable switch and caching for and 18\% benefits to be not worth it, especi
 that next generation NICs are slated for bandwidths of 800GBPS+. If future switch technology were to
 allow for larger object caches we believe this direction may be fruitful.
 
-The purpose of this example is to illustrate the constraints of current programmable switch
-hardware. Would a cache be total infeasible on other programable network hardware? Not nessisary,
-given 
-
-
+Given these kinds of subtle constraints the use of programmable network hardware must be carefully
+considered. In the case of \sword we explore the use of a programmable switch for caching parts of a
+shared data structure including locks, and parts of index structures. We found that some data
+structures, specifically those that require very little state in their index for a read or a write
+to succeed are well suited for caching. An example of this is appending to a linked list where only
+the last element of the list needs to be cached in order for an append to succeed. Alternatively
+inserting into an arbitrary location in a linked list is hard as all the nodes in the linked list
+need to be cached.
 
 \section{Disaggregated Systems and Data Structures}
 
