@@ -130,8 +130,8 @@ and may be omitted.
 I would like to acknowledged my advisor Alex C. Snoeren for his dedication to his craft and guidance
 over the past 6 years. No piece of work within this thesis would be possible without your
 collaboration. I would also like to thank my committee members Amy Ousterhout, Yiying Zhang, and
-George Papen for their feedback and guidance, and Shrikanth Kandula for his mentorship during my
-time at MSR.
+George Papen for their feedback and guidance, and Srikanth Kandula for his mentorship during my time
+at MSR.
 
 This thesis has been extraordinarily influenced by Anil Yelam, my closest collaborator. Thank you
 for all the time you spent working on our collaborations, and the hours spent discussing and
@@ -265,36 +265,38 @@ practitioners have to provision their servers for the sum of peak demand, when r
 they can be provisioned for the peak of the sum of demand which can be significantly
 lower~\cite{supernic, dsnf}.
 
-The enabling technology for disaggregation is a fast network. Network capacities continue to grow,
-current commodity NICs offer 400Gbps of bandwidth, and Terabit ethernet is on the horizon.
-Simultaneously networks are increasingly programmable with SmartNICs, FPGAs, and programmable
-switches offering line rate processing of user defined functions. These technologies enable the
-construction of fast, low latency, and high bandwidth networks which are essential for
-disaggregation. These two trends have lead to intra rack latencies of 1-2us and network bandwidths
-on the same order as memory bandwidths with the ability to inspect, cache, and modify packets in
-flight at line rate. Together they lay the foundation for rack-scale disaggregated computers.
-
-If disaggregation were easy it would have been done already, and it some cases it has. Storage, we
-describe more in the background section has seen widespread disaggregation largely because the cost
-of a network round trip and transmission time is low in comparison to the cost of a disk access. In
-the case of memory disaggregation is hard because the cost of a network round trip is an order of
-magnitude higher than a local memory access, effectively making remote memory a separate tier from
-local DRAM in terms of performance. This performance gap makes realizing remote memory difficult,
-and especially so for shared data structures where the cost of coherence between remote cores is
-both required and expensive, and handing failures between remote memory and CPU's is a first class
-concern.
+Disaggregation is only possible because of new fast and programmable networks. Commodity NICs now
+offer 400Gbps with expectations for continued growth, and network devices are increasingly
+programmable with multiple vendors offering programable SmartNICs, DPUs and switches.  These two
+trends have lead to intra rack latencies of 1-2us and network bandwidths on the same order as memory
+bandwidths with the ability to inspect, cache, and modify packets in flight at line rate.
+%%
+But if disaggregation were easy it would have been done already, \textit{and it some cases it has}.
+Storage, has seen widespread disaggregation. The key enabling factor is that storage device access
+latency is far higher than a network round trip. In the case of memory the opposite is true. Memory
+access latency is 20x lower than an RTT effectively making it a separate tier of memory when placed
+across a network.  This performance gap plays out in dramatic fashion when porting data structures
+designed for local memory to far memory systems. Sharing data between multiple remote machines where
+coherence between remote cores is required leads to abysmal performance degradation (300x tail
+latencies in some cases). Further complicating the design of shared data structures is that memory,
+once in a single fault domain, can fail ripping a hole directly into a processes address space.
 
 This thesis explores the design of shared data structures in disaggregated memory systems.  I
 present two systems ({\sword} and RCuckoo) which focus on the challenges of sharing and contending
-access to remote memory. {\sword} is a middlebox approach for removing contention from shared data
-structures. The high level insight behind {\sword} is to leverage the fact that at rack-scale TORs
-have a serialized view of traffic to and from servers. Using this idea {\sword} caches data
-structure state on a programmable switch. Second I present RCuckoo a fully disaggregated key-value
-which is designed to improve data locality and reduce the number of network round trips required to
-access data. {\sword} yields orders of magnitude improvements in both throughput (up to 30x) and
-tail latency (up to 300x).  RCuckoo meets or exceeds the performance of all state of the art
-disaggregated key-value stores on small key-value pairs and significantly outperforms other systems
-on read-mostly workloads.
+access to remote memory. {\sword} (Chapter~\ref{chap:swordbox}) is a middlebox approach for removing
+contention from shared data structures. The high level insight behind {\sword} is to leverage the
+fact that at rack-scale TORs have a serialized view of traffic to and from servers. Using this idea
+{\sword} caches data structure state on a programmable switch. 
+%%
+Second I present RCuckoo (Chapter~\ref{chap:rcuckoo}) a fully disaggregated key-value store. RCuckoo
+is specially designed to improve key-value locality. Using locality sensitive hashing RCuckoo
+improves, reads, writes, locking and fault recovery performance buy reducing the overall number of
+round trips required for each operation.
+%%
+{\sword} yields orders of magnitude improvements in both
+throughput (up to 30x) and tail latency (up to 300x).  RCuckoo meets or exceeds the performance of
+all state of the art disaggregated key-value stores on small key-value pairs and significantly
+outperforms other systems on read-mostly workloads.
 
 \end{dissertationintroduction}
 
@@ -302,30 +304,26 @@ on read-mostly workloads.
 
 Calls for distributed memory systems have been made for decades, and the groundwork of
 disaggregation relies heavily on the work of the past~\cite{treadmarks,gms}. However, disaggregation
-differs from prior distributed systems due to it's differences in scale, and system assumptions.
-It's primary difference is the assumption that each resource be stand alone, and paired with
-miniscule or no compute power, save for resources like CPUs an GPUs which are inherently compute.
-This assumption transforms the technologies and requirements for disaggregated systems. Critically
-Remote Direct Memory Access (RDMA) (or similar CPU bypass technology) is essential in constructing a
-passive storage system. Simultaneously in-network line rate processing of user defined functions is
-now commonly available in a variety of network devices. The intersection of passive storage,
-massively concurrent compute, and programmable networks set a unique landscape for the design of
-disaggregated systems.
+differs from prior distributed systems due to it's scale, and system assumptions. Disaggregation
+assumes that each resource be stand alone, and paired with miniscule or no compute power, save for
+resources like CPUs an GPUs which are inherently compute.  This assumption transforms the
+technologies and requirements for disaggregated systems. Critically Remote Direct Memory Access
+(RDMA) (or a similar CPU bypass technology) is essential in constructing a passive storage system.
 
 \section{Disaggregation}
 
 As with many paradigm shifts within the systems community the idea of disaggregation is born from
 shifting hardware trends. Per core access to memory has been decreasing for decades. CPU core counts
 have consistently increased for over a decade while memory speeds and capacity have improved
-comparatively slowly~\todo{cite memory chart}. The result is that CPU cores have less access to
+comparatively slowly~\cite{micron-memorywall}. The result is that CPU cores have less access to
 memory now than 10 years ago. Memory is now an increasingly scarce resource and data center
 operators are exploring new ways to achieve better memory utilization. Disaggregation is one such
-option. Monolithic servers have a fixed amount of RAM per machine which, at a data center level leads
-to a skewed distributed of memory utilization. Some servers are starving for memory while others
-have gigabytes to spare. This spare (stranded) memory is the target of disaggregation, it aims to
-give each server access to a shared pool of RAM. In general a disaggregated resource, be it memory,
-FPGA's, or the network itself, can be provisioned for the peak-of-sums, rather than monolithic
-resources which are provisioned for the sum-of-peaks~\cite{clio,supernic,dsnf}.
+option. Monolithic servers have a fixed amount of RAM per machine which, at a data center level,
+leads to a skewed distributed of memory utilization. Some servers are starving for memory while
+others have gigabytes to spare. This spare (stranded) memory is one target of disaggregation, it
+aims to give each server access to a shared pool of RAM. In general a disaggregated resource, be it
+memory, FPGA's, or the network itself, can be provisioned for the peak-of-sums, rather than
+monolithic resources which are provisioned for the sum-of-peaks~\cite{clio,supernic,dsnf}.
 
 The biggest barrier to disaggregation is network latency, and more aptly the difficulty of
 disaggregating a resource is proportional it's access latency with respect to the additional latency
@@ -394,6 +392,9 @@ contention~\cite{rdma-masked-cas}. These atomic operations are the critical comp
 shared disaggregated systems. They enable the construction of locks and semaphores, as well as
 lock-free data structures.
 
+\section{CXL}
+\todo{Write a bit about CXL and how it relates to the RDMA memory model}
+
 
 \section{Programable Networks}
 
@@ -426,6 +427,67 @@ Ideal programs for programmable switches provide a high degree of benefit from a
 computation. As an example a network sequencer which gives a unique monotonic sequence number to
 each packet is ideal as it requires only a few small amount of storage space, and limited amount of
 computation per packet.
+
+\subsection{Programmable Switch Use (and Misuse) Cases}
+
+Memory constraints on programmable network devices, as well as their programming model and
+architecture have a large impact on what kinds of systems can and should be built upon
+them~\cite{when-computer}. Cache size and pipeline depth have a large impact on what can be
+effectively stored on a programable switch. As part of our exploration of {\sword}
+(Chapter~\ref{chap:swordbox}) we examined the use of a programmable switch as a cache for the
+replicated log, and found that the switch for a variety of subtle reasons was not a good fit for our
+cache despite many prior works on in-network caching and key-value
+stores~\cite{netcache,netchain,netkv,netlock}.
+
+In the log system all clients must read all log entries for consistency. This read patten leads to a
+bandwidth bottleneck on the server hosting the log as the number of clients increases and the size
+of the log entry increases.  Figure~\ref{fig:bandwidth-model} Illustrates how as the number of
+clients and the size of individual log entries increases performance falls over. In our initial
+design we debated how to deal with the bottleneck. On one hand we could replicate the log across
+multiple memory servers and alleviate the broadcast bottleneck by spreading it across replicas.
+Alternatively we could cache the most recent writes on a programmable switch.  Initially we thought
+that the switch would be an excellent place for the log cache because we could easily reason about
+the access pattern of the log, and each client's link bandwidth would be proportional to how much
+they read. But the devil is in the details. Due to RDMA and switch pipeline constraints as described
+in the following section we found that the switch was an untenable solution.
+
+\begin{figure}
+\centering
+\includegraphics[width=0.99\linewidth]{fig/bandwidth-model.pdf}
+\caption{Bandwidth model for memory replication. 1MS is a single memory node, while 3MS is 3.}
+\label{fig:bandwidth-model}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\textwidth]{fig/switch-cache-model.pdf}
+    \caption{Performance improvement of caching on a programable switch as a function of hit rate and object cache size}
+    \label{fig:switch-cache-model}
+\end{figure}
+
+The values in Figure~\ref{fig:switch-cache-model} assume 64 clients and a single memory server and a
+log entry size of 8 bytes. The 0\% hit rate on cache sizes of 1024 is almost identical to the
+furthest left point in Figure~\ref{fig:scalability}(c) with 64 clients and a single memory node.
+Note that with this cache size and a hit rate of 95\% which may be attainable considering the log
+access patterns are extremely predictable we are able to handle around 200 Million ops per second,
+nearly the same as achieved by a 4 client setup.
+
+Unfortunately current programmable switch hardware does not allow for cashable objects over 192
+bytes. Our Tofino 2 switch has a fixed sized 64 bit maximum storage capacity at each stage of it's
+pipeline, with a total of 24 stages counting both ingress and egress~\cite{tofino2}. Given a maximum
+cache size of 192 we can again calculate our maximum performance improvement. Using max sized RDMA
+reads of 192 bytes we significantly drop performance without the use of a switch, and in the common
+case get around 68 MOPS, our model without a switch striping across 3 memory servers yields a
+maximum of 57 MOPS. While still a theoretical advantage we consider the complexity of adding a
+programmable switch and caching for and 18\% benefits to be not worth it, especially considering
+that next generation NICs are slated for bandwidths of 800GBPS+. If future switch technology were to
+allow for larger object caches we believe this direction may be fruitful.
+
+The purpose of this example is to illustrate the constraints of current programmable switch
+hardware. Would a cache be total infeasible on other programable network hardware? Not nessisary,
+given 
+
+
 
 \section{Disaggregated Systems and Data Structures}
 
@@ -484,6 +546,7 @@ implement any number of memory side network functions.
 
 
 \chapter{Disaggregated Cuckoo Hashing}
+\label{chap:rcuckoo}
 \input{rcuckoo/intro}
 \input{rcuckoo/background}
 \input{rcuckoo/body}
