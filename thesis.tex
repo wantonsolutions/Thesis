@@ -14,6 +14,7 @@
 \usepackage{subcaption}
 \usepackage{amsmath}
 \usepackage{enumitem}
+\usepackage{arydshln}
 \AtBeginDocument{%
 	\settowidth\cvlabelwidth{\cvlabelfont 0000--0000}%
 }
@@ -22,6 +23,16 @@
 
 \newcommand{\sword}{SwordBox}
 \newcommand{\thesistitle}{Disaggregated Data Structures: Sharing and contention with RDMA and Programmable Networks}
+
+\usepackage{multirow}
+\usepackage{tikz}
+\newcommand*\nullcirc[1][1ex]{\tikz\draw (0,0) circle (3pt);} 
+\newcommand*\halfcirc[1][1ex]{%
+  \begin{tikzpicture}
+  \draw[fill] (0,0)-- (90:3pt) arc (90:270:3pt) -- cycle ;
+  \draw (0,0) circle (3pt);
+  \end{tikzpicture}}
+\newcommand*\fullcirc[1][1ex]{\tikz\fill (0,0) circle (3pt);} 
 
 % OGS recommends increasing the margins slightly.
 \increasemargins{.1in}
@@ -410,7 +421,11 @@ it to rack scale deployments. Finally CXL does not, at the time of writing, supp
 programmability. As we will show in our work in Chapter~\ref{chap:swordbox} in-network
 programmability is a powerful tool for reducing contention in shared data structures, the lack of
 any programmable devices in network may limit the ability to effectively share CXL devices. Prior
-work on remote memory data structures indicated that allowing CPU cores to subscribe to \textit{notify} groups could reduce the price of coherence while enabling fast shared structures~\cite{aguilera2019designing}
+work on remote memory data structures indicated that allowing CPU cores to subscribe to
+\textit{notify} groups could reduce the price of coherence while enabling fast shared
+structures~\cite{aguilera2019designing}. While notifications are not natively supported by CXL, CXL
+devices could be designed to support them without the need to build CXL programmable network
+devices.
 
 
 \todo{list of citations}
@@ -562,6 +577,42 @@ implement any number of memory side network functions.
 \chapter{Swordbox: Accelerated Sharing of Disaggregated Memory}
 \label{chap:swordbox}
 
+\section{Overview}
+
+Proposals for disaggregated memory systems often forgo sharing entirely in favor of partitioned
+regions~\cite{infiniswap,fastswap,leap,legoos,blade}. Each of these proposals cuts at a fundamental
+goal of remote memory which is to increase capacity via pooling and reduce the need to increase CPU
+pin counts for increased memory bandwidth. The unfortunate result is that these systems do not meet
+the same expectations as local memory systems. For instance any system requiring MMAP with
+\textit{Shared} semantics is not natively supported, and for those that do, the performance penalty
+is extreme with no tools to mitigate the cost. The issue with this approach is that it may have
+unforeseen consequences in terms of memory utilization that may actually be worse than those on
+monolithic servers. 
+
+One strategy to deal with the cost of synchronization is to simply have applications duplicate
+resources rather than share them. On a large system hosting hundred of VM's the cost of duplicating
+shared libraries is known to be high and dedup among VM's is already common.  Further on monolithic
+servers the explicit nature of message passing systems has been studied extensively and extremely
+high performance can be achieved by using explicit remote accesses~\cite{herd, erpc}. Given these two
+factors monolithic servers with well designed RPC systems could easily share more effectively than
+disaggregated systems that expose transparent but slow interfaces or which blindly replicates.
+
+The key motivation behind {\sword} is to provide an upper bound on the performance achievable by a
+disaggregated shared memory. We noticed while investigating shared remote memory that the fastest
+RDMA key-value stores used mostly one-sided RDMA but still required a CPU to serialize writes. The
+moment that the CPU was removed entirely the 99th percentile tail latency jumped
+dramatically~\cite{clover}. One option we considered was to use a smartNIC to serialize writes
+rather than a CPU, prior projects like Clio~\cite{clio}, SuperNIC~\cite{supernic}, and
+Prism~\cite{prism} suggested that network functions were a good fit for smartNICs and that they
+could be used to implement \textit{close to memory} operations like pointer chasing. While we
+agreed, individual NICs could not provide rack-scale coherence -- in order to provide a rack-scale
+uniform memory machine we would need to think about a centralized solution. A programmable switch is
+an ideal candidate for this role as it sees all of the traffic in a rack and can enforce global
+ordering. Our goal in this project was to design a system which could provide a full upper bound on
+the performance achievable by a disaggregated shared memory system as a benchmark for future systems
+to compare to.
+
+
 \input{swordbox/intro}
 \input{swordbox/backv2}
 \input{swordbox/tmp_sigcomm}
@@ -573,6 +624,48 @@ implement any number of memory side network functions.
 
 \chapter{Disaggregated Cuckoo Hashing}
 \label{chap:rcuckoo}
+\section{Overview}
+
+While \sword provides an upper bound on the performance of a shared remote memory system, it is not
+a general purpose solution. 
+
+\begin{table}[h]
+	%\begin{table}[h]
+		\centering
+		\begin{tabular}{ c | c | c | c | c | c | c | c | c }
+			& project & \shortstack{read \\ inflation} & \shortstack{relaxed  \\ layout} & \shortstack{pre-\\compute} & \shortstack{OC*} & \shortstack{metadata \\ caching} & \shortstack{CC*} & \shortstack{self \\ verifing}  \\ \hline
+																	%N          %R          %P          %O          %M          %C          %W          %S
+	\multirow{3}{*}{\rotatebox[origin=c]{90}{\shortstack{Multicore \\ NUMA}}} & \shortstack{Flat \\ Combining}~\cite{flat-combining}   & \nullcirc & \nullcirc & \nullcirc & \nullcirc & \nullcirc & \fullcirc & \nullcirc \\ \cdashline{2-9}
+			 & \shortstack{Hopscotch \\ Hash}~\cite{hopscotch}         & \fullcirc & \nullcirc & \nullcirc & \nullcirc & \nullcirc & \nullcirc & \nullcirc \\ \cdashline{2-9}
+	%\multirow{1}{*}{\rotatebox[origin=c]{0}{\shortstack{NUMA}}} & \shortstack{Blackbox \\ NUMA}~\cite{black-box-numa}     &  &  &  &  &  &  &  &  \\ \hline \hline %\cline{2-10} \cline{2-10}
+			& \shortstack{Blackbox \\ NUMA}~\cite{bbn}     & \halfcirc & \nullcirc & \nullcirc & \fullcirc & \fullcirc & \fullcirc & \nullcirc \\ \hline %\cline{2-10} \cline{2-10}
+	\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{RDMA \\ Key-Value}}} & pilaf~\cite{pilaf}                                      & \nullcirc & \nullcirc & \nullcirc & \nullcirc & \nullcirc & \nullcirc & \fullcirc \\ \cdashline{2-9}
+			 & farm~\cite{farm}                                        & \fullcirc & \nullcirc & \nullcirc & \fullcirc & \fullcirc & \fullcirc  & \nullcirc \\ \cdashline{2-9}
+			 & herd~\cite{herd}                                        & \nullcirc & \nullcirc & \nullcirc & \nullcirc & \nullcirc & \nullcirc  & \nullcirc \\ \cdashline{2-9}
+			 & cell~\cite{cell}                                        & \nullcirc & \nullcirc & \nullcirc & \halfcirc & \fullcirc & \nullcirc  & \fullcirc \\ \hline \hline
+			 % & % fasst~\cite{faast}                                      & \nullcirc & \nullcirc & \nullcirc & \nullcirc & \nullcirc %& \nullcirc & \nullcirc \\ \hdashline
+			 % & % erpc~\cite{erpc}                                        & \nullcirc & \nullcirc & \nullcirc & \nullcirc & \nullcirc & \nullcirc & \nullcirc \\ \hdashline
+			 %& storm~\cite{storm}                                      &  &  &  &  &  &  &  \\ \cdashline{2-9}
+			 % & 1RMA~\cite{1rma}                                        &  &  &  &  &  &  &  \\ \hline \hline
+	%\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{\small Disaggregated \\ \small Datastructures }}}        & Clover~\cite{clover}                                    & \nullcirc &  \halfcirc &  \nullcirc & \fullcirc & \fullcirc  & \nullcirc & \nullcirc \\ \cdashline{2-9}
+	\multirow{4}{*}{\rotatebox[origin=c]{90}{\shortstack{\small Disaggregated \\ \small Datastructures }}}        & Clover~\cite{clover}                                    & \nullcirc &  \halfcirc &  \nullcirc & \fullcirc & \fullcirc  & \nullcirc & \nullcirc \\ \cdashline{2-9}
+	%\multirow{5}{*}{\rotatebox[origin=c]{90}{\shortstack{Far-Memory \\ Structures}}}        & Clover~\cite{clover}                                    & \nullcirc &  \halfcirc &  \nullcirc & \fullcirc & \fullcirc  & \nullcirc & \nullcirc \\ \cdashline{2-9}
+			 & \shortstack{RACE}~\cite{race}            & \fullcirc  & \fullcirc & \halfcirc & \fullcirc & \fullcirc & \nullcirc & \fullcirc \\ \cdashline{2-9}
+			 & \shortstack{Sherman \\ ~\cite{sherman}}                            & \fullcirc & \fullcirc & \halfcirc & \fullcirc & \fullcirc & \fullcirc & \fullcirc \\ \cdashline{2-9}
+			 %& Ford~\todo{}                                          &  &  &  &  &  & \\ \cdashline{2-9}
+			 & Mind~\cite{mind}                                              & \nullcirc & \halfcirc & \halfcirc & \nullcirc & \fullcirc & \nullcirc & \nullcirc \\ \hline
+		\end{tabular}
+	
+		\caption{Cross section of systems and techniques. Full circles
+		\fullcirc imply that a system uses the category, \halfcirc denotes when a
+		system meets the qualification in spirit but not explicitly, and \nullcirc
+		when the technique is absent. Columns OC and CC stand for Optimistic Concurrency and Compute Coalescing respectively.}
+		
+		\label{tab:1}
+	\end{table} 
+
+
+
 \input{rcuckoo/intro}
 \input{rcuckoo/background}
 \input{rcuckoo/body}
@@ -618,46 +711,46 @@ implement any number of memory side network functions.
 % \label{fig:zen}
 % \end{figure}
 
-% \begin{table}
-% \centering
-% \caption[Electronic Dissertation Submission Rates]{Electronic
-% Dissertation Submission Rates at UCSD, Fall 2005 and Winter 2006.
-% (First two quarters that the program was available to all Ph.D.
-% candidates not in a Joint Doctoral Program with SDSU.)}
-% \label{tab:bad}
-% \begin{tabular}{|*{5}{>{\centering\arraybackslash}m{.15\linewidth}|}}
-% \hline
-% &Ph.D.s awarded (Including Joint degrees) & Electronic submission of
-% Dissertation & Paper Submission of Dissertation & Percentage of
-% Electronic Submission\\
-% \hline
-% Fall\par 2005 & 84 & 37 & 47 & 44.05\%\\
-% \hline
-% Winter\par 2006 & 64 & 42 & 22 & 65.63\%\\
-% \hline
-% \end{tabular}
-% \end{table}
+\begin{table}
+\centering
+\caption[Electronic Dissertation Submission Rates]{Electronic
+Dissertation Submission Rates at UCSD, Fall 2005 and Winter 2006.
+(First two quarters that the program was available to all Ph.D.
+candidates not in a Joint Doctoral Program with SDSU.)}
+\label{tab:bad}
+\begin{tabular}{|*{5}{>{\centering\arraybackslash}m{.15\linewidth}|}}
+\hline
+&Ph.D.s awarded (Including Joint degrees) & Electronic submission of
+Dissertation & Paper Submission of Dissertation & Percentage of
+Electronic Submission\\
+\hline
+Fall\par 2005 & 84 & 37 & 47 & 44.05\%\\
+\hline
+Winter\par 2006 & 64 & 42 & 22 & 65.63\%\\
+\hline
+\end{tabular}
+\end{table}
 
-% \begin{table}
-% \centering
-% \caption[Electronic Dissertation Submission Rates]{Electronic
-% Dissertation Submission Rates at UCSD, Fall 2005 and Winter 2006.
-% (First two quarters that the program was available to all Ph.D.
-% candidates not in a Joint Doctoral Program with SDSU.)}
-% \label{tab:good}
-% \renewcommand\tabularxcolumn[1]{>{\RaggedRight\arraybackslash}p{#1}}
-% \begin{tabularx}{.9\linewidth}{lcccc}
-% \toprule
-% &\multicolumn{1}{X}{Ph.D.s awarded (Including Joint degrees)}
-% &\multicolumn{1}{X}{Electronic submission of Dissertation}
-% &\multicolumn{1}{X}{Paper Submission of Dissertation}
-% &\multicolumn{1}{X}{Percentage of Electronic Submission}\\
-% \midrule
-% Fall 2005 & 84 & 37 & 47 & 44.05\%\\
-% Winter 2006 & 64 & 42 & 22 & 65.63\%\\
-% \bottomrule
-% \end{tabularx}
-% \end{table}
+\begin{table}
+\centering
+\caption[Electronic Dissertation Submission Rates]{Electronic
+Dissertation Submission Rates at UCSD, Fall 2005 and Winter 2006.
+(First two quarters that the program was available to all Ph.D.
+candidates not in a Joint Doctoral Program with SDSU.)}
+\label{tab:good}
+\renewcommand\tabularxcolumn[1]{>{\RaggedRight\arraybackslash}p{#1}}
+\begin{tabularx}{.9\linewidth}{lcccc}
+\toprule
+&\multicolumn{1}{X}{Ph.D.s awarded (Including Joint degrees)}
+&\multicolumn{1}{X}{Electronic submission of Dissertation}
+&\multicolumn{1}{X}{Paper Submission of Dissertation}
+&\multicolumn{1}{X}{Percentage of Electronic Submission}\\
+\midrule
+Fall 2005 & 84 & 37 & 47 & 44.05\%\\
+Winter 2006 & 64 & 42 & 22 & 65.63\%\\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 % \begin{facingcaption}{table}
 % \caption[UCSD Gender Distribution]{University of
