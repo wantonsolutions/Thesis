@@ -125,13 +125,13 @@ doubtful of success, nor more dangerous to handle, than to initiate a new order 
 \listoftables
 
 % Preface
-\begin{preface}
-\todo{Write a preface - take a look at some examples because it seems rather free form}
-Almost nothing is said in the manual about the preface. There is no
-indication about how it is to be typeset. Given that, one is forced to
-simply typeset it and hope it is accepted. It is, however, optional
-and may be omitted.
-\end{preface}
+% \begin{preface}
+% \todo{Write a preface - take a look at some examples because it seems rather free form}
+% Almost nothing is said in the manual about the preface. There is no
+% indication about how it is to be typeset. Given that, one is forced to
+% simply typeset it and hope it is accepted. It is, however, optional
+% and may be omitted.
+% \end{preface}
 
 % Your fancy acks here. Keep in mind you need to ack each paper you
 % use. See the examples here. In addition, each chapter ack needs to
@@ -343,7 +343,7 @@ SSD's and HDD's into shared storage pools for their increased capacity and lower
 relatively easy in comparison to an accelerator, or memory as the access cost of storage is already
 high relative to the network. In concrete terms intra rack RDMA ping latencies are on the order of
 1-2 us. HDD latencies are 10-20ms and SSD are often 100's of us. In these cases the network overhead
-is a single digit percentage or less~\cite{decible}\todo{go back and get more citations}. In
+is a single digit percentage or less~\cite{decible}. In
 contrast DRAM latencies are 50-100ns. DRAM over RDMA has a nearly 20x overhead compared to local
 access. Despite this overhead RDMA is one of the strongest contenders for a disaggregated transport.
 CXL is a burgeoning technology which promises NUMA like latencies for remote memory
@@ -411,29 +411,29 @@ aims to expand CPU memory capacity by allowing for the attachment of remote memo
 only a few CXL devices being available at the time of writing the technology is promising. Initial
 work has shown that CXL latencies for remote memory devices are between 2-5x the latency of local
 memory demonstrating that CXL devices can provide lower latency and higher throughput than
-RDMA~\cite{cxl-demyst}. Given these promising results we expect that CXL will be a strong contender
-for remote memory. \todo{add tpp and pond}
+RDMA~\cite{cxl-demyst,tpp,pond}. Given these promising results we expect that CXL will be a strong
+contender for remote memory pools.
 
-CXL has some limitations that are not present in RDMA, specifically surrounding how memory is
-shared. CXL provides cache coherent memory semantics, however the expected cost of coherence similar
-to NUMA coherence will be high. Second CLX does not currently support a routing layer which limits
-it to rack scale deployments. Finally CXL does not, at the time of writing, support in-network
-programmability. As we will show in our work in Chapter~\ref{chap:swordbox} in-network
-programmability is a powerful tool for reducing contention in shared data structures, the lack of
-any programmable devices in network may limit the ability to effectively share CXL devices. Prior
-work on remote memory data structures indicated that allowing CPU cores to subscribe to
+CXL has limitations that are not present in RDMA, specifically surrounding how memory is shared. CXL
+provides cache coherent memory semantics, however the expected cost of coherence similar to NUMA
+coherence will be high. Second CLX does not currently support a routing layer which limits it to the
+scalability of a CXL switch (likely rack scale). Finally CXL does not, at the time of writing,
+support in-network programmability. As we will show in our work in Chapter~\ref{chap:swordbox}
+in-network programmability is a powerful tool for reducing contention in shared data structures, the
+lack of any programmable devices in network may limit the ability to effectively share CXL devices.
+Prior work on remote memory data structures indicated that allowing CPU cores to subscribe to
 \textit{notify} groups could reduce the price of coherence while enabling fast shared
 structures~\cite{aguilera2019designing}. While notifications are not natively supported by CXL, CXL
 devices could be designed to support them without the need to build CXL programmable network
-devices.
+devices. 
 
-
-\todo{list of citations}
-Citations - Numbers~\cite{cxl-demyst}
-Facebook - tpp~\cite{tpp}
-Microsoft - pond~\cite{pond}
-\todo{Write a bit about CXL and how it relates to the RDMA memory model}
-
+Alternatively techniques for NUMA scalability may also apply to remote such as black box approaches
+for NUMA data structures~\cite{bbn,nros,ironsync}. These techniques are powerful and enable general
+data structures to be built on NUMA architectures with low latency. While powerful these systems
+require each NUMA domain to synchronize it's log with a singular log master, it also requires
+efficient support for atomic operations like CAS. It's unclear at this point in time if these
+approaches will scale up to the expected number of NUMA domains in a disaggregated deployment due to
+the fact that their bandwidth requirements grow linearly with the number of domains.
 
 \section{Programable Networks}
 
@@ -694,7 +694,18 @@ only incurring an additional bandwidth penalty.
 The second trend we identified is that pushing computation to the client can save a significant
 amount of time in place of locality. Page tables are difficult to port to remote memory as each
 level of indirection requires a round trip. Clio introduced the idea of a flat page table. Their
-insight is that when creating a virtual address space the virtual address is not critical.
+insight is that when creating a virtual address space the virtual address itself is not critical.
+Rather than handle multiple levels of page tables they push the complexity to the allocation
+function. When allocating in Clio the allocator uses a flat hash based page table with a single look
+up. The table avoids collisions by iteratively generating virtual addresses until one is produced
+which does not cause a hash table collision. This \textit{pre-computation} technique is powerful as
+it allows for a single round trip for getting remote memory allocations.
+
+Table~\ref{tab:re-table} lists multiple other techniques which cross cut the literature. We believed
+that techniques such as precomputation and locality could be used to improve the performance of
+existing data structures. We designed our next system RCuckoo with the intuition that cuckoo
+hashing, which had already been studied in the context of RDMA key-value stores, could be improved
+and made highly efficient by applying these techniques.
 
 
 \input{rcuckoo/intro}
