@@ -343,14 +343,13 @@ SSD's and HDD's into shared storage pools for their increased capacity and lower
 relatively easy in comparison to an accelerator, or memory as the access cost of storage is already
 high relative to the network. In concrete terms intra rack RDMA ping latencies are on the order of
 1-2 us. HDD latencies are 10-20ms and SSD are often 100's of us. In these cases the network overhead
-is a single digit percentage or less~\cite{decible}. In
-contrast DRAM latencies are 50-100ns. DRAM over RDMA has a nearly 20x overhead compared to local
-access. Despite this overhead RDMA is one of the strongest contenders for a disaggregated transport.
-CXL is a burgeoning technology which promises NUMA like latencies for remote memory
-access~\cite{cxl}. At the time of writing CXL is not widely available and it's performance and
-scalability are not well understood. Regardless of interconnect the principle of access latency
-remains the same. This thesis focuses on RDMA although we see the algorithms and data structures
-presented here to be largely interconnect independent.
+is a single digit percentage or less~\cite{decible}. In contrast DRAM latencies are 50-100ns. DRAM
+over RDMA has a nearly 20x overhead compared to local access. Despite this overhead RDMA is one of
+the strongest contenders for a disaggregated transport.  CXL is a burgeoning technology which
+promises NUMA like latencies for remote memory access~\cite{cxl}. At the time of writing CXL is not
+widely available and it's performance and scalability are not well understood. Regardless of
+interconnect the principle of access latency remains the same. This thesis focuses on RDMA although
+we see the algorithms and data structures presented here to be largely interconnect independent.
 
 
 \section{RDMA}
@@ -583,7 +582,7 @@ Proposals for disaggregated memory systems often forgo sharing entirely in favor
 regions~\cite{infiniswap,fastswap,leap,legoos,blade}. Each of these proposals cuts at a fundamental
 goal of remote memory which is to increase capacity via pooling and reduce the need to increase CPU
 pin counts for increased memory bandwidth. The unfortunate result is that these systems do not meet
-the same expectations as local memory systems. For instance any system requiring MMAP with
+the same expectations as local memory systems. For instance any system requiring mmap with
 \textit{Shared} semantics is not natively supported, and for those that do, the performance penalty
 is extreme with no tools to mitigate the cost. The issue with this approach is that it may have
 unforeseen consequences in terms of memory utilization that may actually be worse than those on
@@ -593,9 +592,10 @@ One strategy to deal with the cost of synchronization is to simply have applicat
 resources rather than share them. On a large system hosting hundred of VM's the cost of duplicating
 shared libraries is known to be high and dedup among VM's is already common.  Further on monolithic
 servers the explicit nature of message passing systems has been studied extensively and extremely
-high performance can be achieved by using explicit remote accesses~\cite{herd, erpc}. Given these two
-factors monolithic servers with well designed RPC systems could easily share more effectively than
-disaggregated systems that expose transparent but slow interfaces or which blindly replicates.
+high performance can be achieved by using explicit remote accesses~\cite{herd, erpc}. Given these
+two factors monolithic servers with well designed RPC systems could potentially share more
+effectively and achieve better resource utilization than a naive disaggregated system which exposes
+a transparent but slow interface to remote memory or which blindly replicates rather than sharing.
 
 The key motivation behind {\sword} is to provide an upper bound on the performance achievable by a
 disaggregated shared memory. We noticed while investigating shared remote memory that the fastest
@@ -723,6 +723,45 @@ and made highly efficient by applying these techniques.
 % \todo{finish up you writeup for a fall submission of BBD and paste it her}
 
 \chapter{Conclusion}
+
+This thesis proposes two systems for sharing remote memory. {\sword}, a programmable switch based
+caching system which removes contention from existing disaggregated programs, and RCuckoo a cuckoo
+hash designed specifically for one-sided RDMA access. Both systems push the performance and
+scalability limits of shared disaggregated data structures at two points in the design space (with
+and without programmable network devices). \swordbox demonstrates how caching can be used to remove
+contention entirely and achieve performance equal to the underlying network capabilities. RCuckoo
+demonstrates that by carefully constructing algorithms we can increase locality and take advantage
+of features in commodity network hardware (large sequential RDMA reads, and on-NIC lock tables).
+
+These two systems only demonstrate two design points where many more could exist. For instance,
+\swordbox takes the stance that a single programable switch sees all traffic within the rack and
+that a developer has unfettered access P4 to which programs run on the switch. Similar strategies
+could potentially be used with a less generic programming interface such as openflow, as
+demonstrated by netkv~\cite{netkv} however the data structures may require serious redesign to adapt
+to openflows limited programming model.
+
+Many off the shelf ARM based or FPGA based smartNICs could be used to implement \sword as well as
+more complex data structures. While SmartNICs lack a global view of a rack ARM based smartNICs do
+have a global view of the machine they are attached to and could be used to implement similar
+caching strategies. SmartNICs typically have much more available memory than programmable switches
+and could likely handel much larger data structures than \sword. The example used at multiple points
+throughout this work for a \textit{difficult} data structure for \sword to deal with is insert into
+a linked list (because the entire linked list needs to be stored in memory). This is unlikely to be
+the same on a smartNIC with a few GB of memory. SmartNICs could be used to cache index structures
+for large structures like B-Tress and use their limited compute to steer read and write requests
+similar to swordbox. More generically they could be used for some of the simple functions which are
+difficult to implement in remote memory such as an allocator.
+
+A further and more generic option for NIC designers is to extend the interface for RDMA to better
+accommodate complex one-sided data structures, while calls for pointer chasing are common, calls for
+more complex atomic operations are less present. The algorithms community has designed many
+wait-free and lockless data structures such as binary trees, and heaps, and other simple structures
+which make use of multi-cas, the ability to CAS multiple addresses simultaneously could open up
+disaggregation to many pointer based data structures. Simultaneously CAS and FAA are limited width.
+Extensions for larger CAS sizes would enable more efficient data structures such as in the case of
+RACE which must limit the size of its key-value pairs due to the lack of space in the 64 bit RDMA
+CAS.
+
 
 % \chapter{ Example Figures and such for formatting reference}
 % This demonstrates how OGS wants figures and tables formatted. For
