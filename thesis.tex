@@ -772,6 +772,16 @@ Sherman for instance enjoys a degrees of associativity at its leaf nodes by havi
 leaves. Other data structures may be able to take advantage of similar properties like appending
 updates to a shared log and eventually combining them into a consolidated data structure.
 
+\sg{Most proposals for disaggregated systems are focused on rack scale deployments, as intra rack
+latencies get lower and lower, and disaggregated technology gets better intra-rack solutions will
+become more tennable. An early example is \textit{Disaggregating Stateful Network
+Functions}~\cite{dsnf} and \textit{SuperNIC}\cite{supernic} which take the stance that a large pool
+of dedicated accelerators can provide a significant portion of the network functions for a data
+center. In line of work routing is paramount and under-explored. \sword assumes a centralized model
+as it needs to track an entire data structure, however a future distributed model could potentially
+scale to multiple racks if the data dependent operations were routed through the correct network
+components.}
+
 
 % \chapter{ Example Figures and such for formatting reference}
 % This demonstrates how OGS wants figures and tables formatted. For
