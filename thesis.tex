@@ -728,20 +728,20 @@ This thesis proposes two systems for sharing remote memory. {\sword}, a programm
 caching system which removes contention from existing disaggregated programs, and RCuckoo a cuckoo
 hash designed specifically for one-sided RDMA access. Both systems push the performance and
 scalability limits of shared disaggregated data structures at two points in the design space (with
-and without programmable network devices). \swordbox demonstrates how caching can be used to remove
+and without programmable network devices). \sword demonstrates how caching can be used to remove
 contention entirely and achieve performance equal to the underlying network capabilities. RCuckoo
 demonstrates that by carefully constructing algorithms we can increase locality and take advantage
 of features in commodity network hardware (large sequential RDMA reads, and on-NIC lock tables).
 
 These two systems only demonstrate two design points where many more could exist. For instance,
-\swordbox takes the stance that a single programable switch sees all traffic within the rack and
+\sword takes the stance that a single programable switch sees all traffic within the rack and
 that a developer has unfettered access P4 to which programs run on the switch. Similar strategies
 could potentially be used with a less generic programming interface such as openflow, as
 demonstrated by netkv~\cite{netkv} however the data structures may require serious redesign to adapt
 to openflows limited programming model.
 
 Many off the shelf ARM based or FPGA based smartNICs could be used to implement \sword as well as
-more complex data structures. While SmartNICs lack a global view of a rack ARM based smartNICs do
+more complex data structures. While SmartNICs lack a global view of a rack, ARM based smartNICs do
 have a global view of the machine they are attached to and could be used to implement similar
 caching strategies. SmartNICs typically have much more available memory than programmable switches
 and could likely handel much larger data structures than \sword. The example used at multiple points
@@ -749,18 +749,28 @@ throughout this work for a \textit{difficult} data structure for \sword to deal 
 a linked list (because the entire linked list needs to be stored in memory). This is unlikely to be
 the same on a smartNIC with a few GB of memory. SmartNICs could be used to cache index structures
 for large structures like B-Tress and use their limited compute to steer read and write requests
-similar to swordbox. More generically they could be used for some of the simple functions which are
-difficult to implement in remote memory such as an allocator.
+similar to \sword. More generically they could be used for some of the simple functions which are
+difficult to implement in remote memory such as an allocator, or scheduler which needs to maintain
+centralized state.
 
 A further and more generic option for NIC designers is to extend the interface for RDMA to better
 accommodate complex one-sided data structures, while calls for pointer chasing are common, calls for
-more complex atomic operations are less present. The algorithms community has designed many
-wait-free and lockless data structures such as binary trees, and heaps, and other simple structures
-which make use of multi-cas, the ability to CAS multiple addresses simultaneously could open up
-disaggregation to many pointer based data structures. Simultaneously CAS and FAA are limited width.
-Extensions for larger CAS sizes would enable more efficient data structures such as in the case of
-RACE which must limit the size of its key-value pairs due to the lack of space in the 64 bit RDMA
-CAS.
+more complex atomic operations are less present~\cite{prism,clio}. The algorithms community has
+designed many wait-free and lockless data structures such as binary trees, and heaps, and other
+simple structures which make use of multi-cas, the ability to CAS multiple addresses simultaneously
+could open up disaggregation to many pointer based data structures which would currently be
+unimplementable. Simultaneously CAS and FAA are limited width.  Extensions for larger CAS sizes
+would enable more efficient data structures such as in the case of RACE, and FUSEE which must limit
+the size of its key-value pairs due to the lack of space in the 64 bit RDMA CAS.
+
+Network-datastructure codesign is a powerful, but under explored area. In the case of \sword Clover
+was a good fit for the system as only the tail pointer of linked lists needed to be stored on the
+switch. Other data structures do not always exhibit this property. Log based or append only data
+structures have promise here as the point of contention (the end of the log) can be managed with
+relatively little state. Future work could be done to enable \textit{append-mostly} data structures,
+Sherman for instance enjoys a degrees of associativity at its leaf nodes by having associative
+leaves. Other data structures may be able to take advantage of similar properties like appending
+updates to a shared log and eventually combining them into a consolidated data structure.
 
 
 % \chapter{ Example Figures and such for formatting reference}
@@ -792,46 +802,46 @@ CAS.
 % \label{fig:zen}
 % \end{figure}
 
-\begin{table}
-\centering
-\caption[Electronic Dissertation Submission Rates]{Electronic
-Dissertation Submission Rates at UCSD, Fall 2005 and Winter 2006.
-(First two quarters that the program was available to all Ph.D.
-candidates not in a Joint Doctoral Program with SDSU.)}
-\label{tab:bad}
-\begin{tabular}{|*{5}{>{\centering\arraybackslash}m{.15\linewidth}|}}
-\hline
-&Ph.D.s awarded (Including Joint degrees) & Electronic submission of
-Dissertation & Paper Submission of Dissertation & Percentage of
-Electronic Submission\\
-\hline
-Fall\par 2005 & 84 & 37 & 47 & 44.05\%\\
-\hline
-Winter\par 2006 & 64 & 42 & 22 & 65.63\%\\
-\hline
-\end{tabular}
-\end{table}
+% \begin{table}
+% \centering
+% \caption[Electronic Dissertation Submission Rates]{Electronic
+% Dissertation Submission Rates at UCSD, Fall 2005 and Winter 2006.
+% (First two quarters that the program was available to all Ph.D.
+% candidates not in a Joint Doctoral Program with SDSU.)}
+% \label{tab:bad}
+% \begin{tabular}{|*{5}{>{\centering\arraybackslash}m{.15\linewidth}|}}
+% \hline
+% &Ph.D.s awarded (Including Joint degrees) & Electronic submission of
+% Dissertation & Paper Submission of Dissertation & Percentage of
+% Electronic Submission\\
+% \hline
+% Fall\par 2005 & 84 & 37 & 47 & 44.05\%\\
+% \hline
+% Winter\par 2006 & 64 & 42 & 22 & 65.63\%\\
+% \hline
+% \end{tabular}
+% \end{table}
 
-\begin{table}
-\centering
-\caption[Electronic Dissertation Submission Rates]{Electronic
-Dissertation Submission Rates at UCSD, Fall 2005 and Winter 2006.
-(First two quarters that the program was available to all Ph.D.
-candidates not in a Joint Doctoral Program with SDSU.)}
-\label{tab:good}
-\renewcommand\tabularxcolumn[1]{>{\RaggedRight\arraybackslash}p{#1}}
-\begin{tabularx}{.9\linewidth}{lcccc}
-\toprule
-&\multicolumn{1}{X}{Ph.D.s awarded (Including Joint degrees)}
-&\multicolumn{1}{X}{Electronic submission of Dissertation}
-&\multicolumn{1}{X}{Paper Submission of Dissertation}
-&\multicolumn{1}{X}{Percentage of Electronic Submission}\\
-\midrule
-Fall 2005 & 84 & 37 & 47 & 44.05\%\\
-Winter 2006 & 64 & 42 & 22 & 65.63\%\\
-\bottomrule
-\end{tabularx}
-\end{table}
+% \begin{table}
+% \centering
+% \caption[Electronic Dissertation Submission Rates]{Electronic
+% Dissertation Submission Rates at UCSD, Fall 2005 and Winter 2006.
+% (First two quarters that the program was available to all Ph.D.
+% candidates not in a Joint Doctoral Program with SDSU.)}
+% \label{tab:good}
+% \renewcommand\tabularxcolumn[1]{>{\RaggedRight\arraybackslash}p{#1}}
+% \begin{tabularx}{.9\linewidth}{lcccc}
+% \toprule
+% &\multicolumn{1}{X}{Ph.D.s awarded (Including Joint degrees)}
+% &\multicolumn{1}{X}{Electronic submission of Dissertation}
+% &\multicolumn{1}{X}{Paper Submission of Dissertation}
+% &\multicolumn{1}{X}{Percentage of Electronic Submission}\\
+% \midrule
+% Fall 2005 & 84 & 37 & 47 & 44.05\%\\
+% Winter 2006 & 64 & 42 & 22 & 65.63\%\\
+% \bottomrule
+% \end{tabularx}
+% \end{table}
 
 % \begin{facingcaption}{table}
 % \caption[UCSD Gender Distribution]{University of
