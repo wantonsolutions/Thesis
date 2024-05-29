@@ -468,34 +468,36 @@ executing users' code often at line rate. A huge variety of devices exist:
 SmartNICs~\cite{fairnic,e3,ipipe,floem}, DPUs~\cite{dsnf},
 FPGAs~\cite{azure-smartnic,clio,catapult,supernic}, and programmable
 switches~\cite{p4,netchain,netcache,netlock} from a wide variety of vendors. Often these devices
-provide thin operating systems which allow users to develop and deploy code, either C or P4. These
-programmable devices are powerful and transformational tools for designing network systems as they
-can offer orders of magnitude performance improvements when deployed in the right
+provide thin operating systems which allow users to develop and deploy code written either in C or
+P4. These programmable devices are powerful and transformational tools for designing network systems
+as they can offer orders-of-magnitude performance improvements when deployed in the right
 context~\cite{when-computer}, such as sequencing where it has show to offer huge benefits for
 consensus~\cite{eris, nopaxos}. In this dissertation we leverage the power of programmable switches
 to exactly this benefit to get fast in-network serialization for RDMA based data structures (Section
 ~\ref{chap:swordbox}).
 
-Programmable switches differ from other programmable network devices in that they have orders of
-magnitude more aggregate bandwidth, specific pipeline architecture, and exclusively operate on P4
-programs.
+~\todo{Alex - lots of downsides what are the upsides?} Programmable switches differ from other
+programmable network devices in that they have orders of magnitude more aggregate bandwidth, a
+switch specific architecture (often pipelined~\cite{tofino2}), and run on P4 code in most cases.
 %%
-Programmable switches such as Intel Tofino~\cite{tofino2} utilize a pipeline architecture. Switches
-typically have an ingress and egress pipeline which is broken into multiple stages. In the case of
-Tofino 2 both ingress and egress have 12 stages. Packets pass through one or more stages and are set
-for transmission once each stage of the pipeline used by the program has executed. Per stage
-computation is limited, usually to a few instructions, such a fetching from a lookup table
+Switches typically have an ingress and egress pipeline which is broken into multiple stages. In the
+case of Tofino 2 both ingress and egress have 12 stages. Packets pass through one or more stages and
+are set for transmission once each stage of the pipeline used by the program has executed. Per stage
+computation is limited, usually to a few instructions, such as fetching from a lookup table,
 processing a conditional, or modifying and storing packet header data. The result is that P4
 programs have a constrained programming model. Loops and recursion are not easily supported and
-branching is limited. Finally switch memory is highly constrained per pipeline stage. All P4
+branching is limited. Finally, switch memory is highly constrained per pipeline stage. All P4
 accessible memory is SRAM of which each switch only has a few megabytes.
 %%
 Ideal programs for programmable switches provide a high degree of benefit from a small amount of
 computation. As an example a network sequencer which gives a unique monotonic sequence number to
-each packet is ideal as it requires only a few small amount of storage space, and limited amount of
-computation per packet.
+each packet is well suited for a programmable switch as it requires only a small amount of
+storage space, and limited amount of computation per packet.
 
 \subsection{Programmable Switch Use (and Misuse) Cases}
+%%
+\todo{I have received a lot of push back on this section probably just cut it, I tried to put it in
+for alex but that was a bad idea.}
 
 Memory constraints on programmable network devices, as well as their programming model and
 architecture have a large impact on what kinds of systems can and should be built upon
@@ -549,8 +551,9 @@ programmable switch and caching for and 18\% benefits to be not worth it, especi
 that next generation NICs are slated for bandwidths of 800GBPS+. If future switch technology were to
 allow for larger object caches we believe this direction may be fruitful.
 
+\todo{Alex - put this insite somewhere in the intro}
 Given these kinds of subtle constraints the use of programmable network hardware must be carefully
-considered. In the case of \sword we explore the use of a programmable switch for caching parts of a
+considered. In the case of {\sword} we explore the use of a programmable switch for caching parts of a
 shared data structure including locks, and parts of index structures. We found that some data
 structures, specifically those that require very little state in their index for a read or a write
 to succeed are well suited for caching. An example of this is appending to a linked list where only
@@ -559,10 +562,14 @@ inserting into an arbitrary location in a linked list is hard as all the nodes i
 need to be cached.
 
 \section{Disaggregated Systems and Data Structures}
+\sg{I've skipped the prior section because I'm not sure that I'll keep it}.
 
-The trends and technologies discussed in the above sections have lead to a new class of system for
+\todo{Amy - I should be seperating systems into different categories here and talking about them in
+more detail, this is where sharing is important}
+
+The trends and technologies discussed in the above sections have led to a new class of system for
 disaggregation. These systems are built with the assumption that resources are separated by a fast
-network and have little to no heterogeneity. I.e a storage server will be prominently storage which
+network and have little to no heterogeneity. I.e a storage server will be mostly storage with
 minimal compute to boot and configure the machine and execute simple management
 tasks~\cite{aguilera2019designing,fast-networks,dis-and-app,legoos}.
 
@@ -588,9 +595,9 @@ replication, recovering, allocation, and serialization protocols. In nearly ever
 performance of these systems is determined by the techniques used to serialize writes on the index
 of the data structure.
 %%
-The techniques used by these systems is largely the same as those used to design RDMA key-value
+The techniques used by these systems are largely the same as those used to design RDMA key-value
 stores for non-disaggregated memory over the past decade~\cite{pilaf,cell,herd,farm}. The primary
-difference is that disaggregated systems use exclusively one sided RDMA operations, while RDMA
+difference is that disaggregated systems use exclusively one-sided RDMA operations, while RDMA
 key-value stores typically route write operations through a CPU to serialize requests.
 %%
 A few systems have proposed to or realized the potential of using a programmable switch, or NIC in a
