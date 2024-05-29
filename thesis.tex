@@ -315,43 +315,53 @@ outperforms other systems on read-mostly workloads.
 
 \chapter{Background}
 
-Calls for distributed memory systems have been made for decades, and the groundwork of
-disaggregation relies heavily on the work of the past~\cite{treadmarks,gms}. However, disaggregation
-differs from prior distributed systems due to its scale, and system assumptions. Disaggregation
-assumes that each resource be stand alone, and paired with miniscule or no compute power, save for
-resources like CPUs an GPUs which are inherently compute.  This assumption transforms the
-technologies and requirements for disaggregated systems. Critically Remote Direct Memory Access
-(RDMA) (or a similar CPU bypass technology) is essential in constructing a passive storage system.
+Calls for distributed memory systems have been made for decades~\todo{define distributed memory
+systems earlier}, and the groundwork of disaggregation relies heavily on the work of the
+past~\cite{treadmarks,gms}. However, disaggregation differs from prior distributed systems due to
+its scale and system assumptions. 
+%%
+Disaggregation assumes that each resource be stand alone, or paired with a miniscule amount of other
+resources. For instance a storage server may have a small amount of compute such as an ARM core or
+two in order to boot, configure and occasionally execute management tasks. Similarly compute servers
+(CPU, GPU) are outfit with a small amount of memory (e.g 4GB~\cite{legoos}) for caching.
+This assumption transforms the technologies and requirements for disaggregated systems.
+
+\todo{add forward pointers to the rest of the background and expand this section and explain the
+purpose of this chapter.}
+% Critically Remote Direct Memory Access (RDMA) (or a similar CPU bypass technology) is essential in
+% constructing a passive storage system.\todo{foreshadow 1.3 and 1.4 to hel}
 
 \section{Disaggregation}
 
 As with many paradigm shifts within the systems community the idea of disaggregation is born from
-shifting hardware trends. Per core access to memory has been decreasing for decades. CPU core counts
-have consistently increased for over a decade while memory speeds and capacity have improved
-comparatively slowly~\cite{micron-memorywall}. The result is that CPU cores have less access to
-memory now than 10 years ago. Memory is now an increasingly scarce resource and data center
-operators are exploring new ways to achieve better memory utilization. Disaggregation is one such
-option. Monolithic servers have a fixed amount of RAM per machine which, at a data center level,
-leads to a skewed distributed of memory utilization. Some servers are starving for memory while
-others have gigabytes to spare. This spare (stranded) memory is one target of disaggregation, it
-aims to give each server access to a shared pool of RAM. In general a disaggregated resource, be it
-memory, FPGA's, or the network itself, can be provisioned for the peak-of-sums, rather than
-monolithic resources which are provisioned for the sum-of-peaks~\cite{clio,supernic,dsnf}.
+shifting hardware trends. Per-core access to memory have been decreasing for decades~\todo{what
+metric is decreasing}. CPU core counts have consistently increased for over a decade while memory
+speeds and capacity have improved comparatively slowly~\cite{micron-memorywall}. The result is that
+CPU cores have less access to memory bandwidth and capacity now than 10 years ago. Memory is an
+increasingly scarce resource and data center operators are exploring new ways to achieve better
+memory utilization.  Disaggregation is one such option. Monolithic servers have a fixed amount of
+RAM per machine which, at a data center level, leads to a skewed distributed of memory utilization.
+Some servers are starving for memory while others have gigabytes to spare. This spare (stranded)
+memory is one target of disaggregation, it aims to give each server access to a shared pool of RAM.
+In general a disaggregated resource, be it memory, FPGA's, or the network itself, can be provisioned
+for the peak-of-sums, rather than monolithic resources which are provisioned for the
+sum-of-peaks~\cite{clio,supernic,dsnf}.
 
-The biggest barrier to disaggregation is network latency, and more aptly the difficulty of
-disaggregating a resource is proportional its access latency with respect to the additional latency
-of the network. Disaggregated storage is a foregone conclusion. Academias and industry have pooled
-SSD's and HDD's into shared storage pools for their increased capacity and lower cost. This is
-relatively easy in comparison to an accelerator, or memory as the access cost of storage is already
-high relative to the network. In concrete terms intra rack RDMA ping latencies are on the order of
+The biggest barrier to disaggregation is network latency~\cite{requirements}, and more aptly the
+difficulty of disaggregating a resource is proportional to its access latency with respect to the
+additional latency of the network. Disaggregated storage is a foregone conclusion. Academia and
+industry have pooled SSD's and HDD's into shared storage pools for their increased capacity and
+lower cost. This is relatively easy in comparison to memory as the access cost of storage is already
+high relative to the network. In concrete terms intra-rack RDMA ping latencies are on the order of
 1-2 us. HDD latencies are 10-20ms and SSD are often 100's of us. In these cases the network overhead
 is a single digit percentage or less~\cite{decible}. In contrast DRAM latencies are 50-100ns. DRAM
 over RDMA has a nearly 20x overhead compared to local access. Despite this overhead RDMA is one of
 the strongest contenders for a disaggregated transport.  CXL is a burgeoning technology which
-promises NUMA like latencies for remote memory access~\cite{cxl}. At the time of writing CXL is not
-widely available and its performance and scalability are not well understood. Regardless of
-interconnect the principle of access latency remains the same. This dissertation focuses on RDMA although
-we see the algorithms and data structures presented here to be largely interconnect independent.
+promises NUMA-like latencies (200-300ns) for remote memory access~\cite{cxl}. At the time of writing
+CXL is not widely available and its performance and scalability are not well understood. Regardless
+of interconnect the principle of access latency remains the same. This dissertation focuses on RDMA
+although we see the algorithms and data structures presented here to be largely interconnect
+independent.
 
 
 \section{RDMA}
