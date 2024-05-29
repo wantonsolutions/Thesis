@@ -315,7 +315,7 @@ outperforms other systems on read-mostly workloads.
 
 Calls for distributed memory systems have been made for decades, and the groundwork of
 disaggregation relies heavily on the work of the past~\cite{treadmarks,gms}. However, disaggregation
-differs from prior distributed systems due to it's scale, and system assumptions. Disaggregation
+differs from prior distributed systems due to its scale, and system assumptions. Disaggregation
 assumes that each resource be stand alone, and paired with miniscule or no compute power, save for
 resources like CPUs an GPUs which are inherently compute.  This assumption transforms the
 technologies and requirements for disaggregated systems. Critically Remote Direct Memory Access
@@ -337,7 +337,7 @@ memory, FPGA's, or the network itself, can be provisioned for the peak-of-sums, 
 monolithic resources which are provisioned for the sum-of-peaks~\cite{clio,supernic,dsnf}.
 
 The biggest barrier to disaggregation is network latency, and more aptly the difficulty of
-disaggregating a resource is proportional it's access latency with respect to the additional latency
+disaggregating a resource is proportional its access latency with respect to the additional latency
 of the network. Disaggregated storage is a foregone conclusion. Academias and industry have pooled
 SSD's and HDD's into shared storage pools for their increased capacity and lower cost. This is
 relatively easy in comparison to an accelerator, or memory as the access cost of storage is already
@@ -347,7 +347,7 @@ is a single digit percentage or less~\cite{decible}. In contrast DRAM latencies 
 over RDMA has a nearly 20x overhead compared to local access. Despite this overhead RDMA is one of
 the strongest contenders for a disaggregated transport.  CXL is a burgeoning technology which
 promises NUMA like latencies for remote memory access~\cite{cxl}. At the time of writing CXL is not
-widely available and it's performance and scalability are not well understood. Regardless of
+widely available and its performance and scalability are not well understood. Regardless of
 interconnect the principle of access latency remains the same. This thesis focuses on RDMA although
 we see the algorithms and data structures presented here to be largely interconnect independent.
 
@@ -371,7 +371,7 @@ application sends by calling a special \textit{rdma send}. This operation is non
 a signal to the NIC which then DMA's the memory out of the processes address space, constructs a
 packet on the NIC (including managing transport state) and sends directly to another machine. The
 receiving NIC (in the case of a write), issues the DMA to the remote machine's memory without ever
-interacting with it's CPU.  The example above is only a high level overview of an RDMA write, the
+interacting with its CPU.  The example above is only a high level overview of an RDMA write, the
 RDMA protocol is deeply complex. The current infiniband RDMA specification is over 1700
 pages~\cite{infiniband-spec}. In this section I will briefly cover the most important aspects of
 RDMA for the purposes of this thesis.
@@ -429,7 +429,7 @@ devices.
 Alternatively techniques for NUMA scalability may also apply to remote such as black box approaches
 for NUMA data structures~\cite{bbn,nros,ironsync}. These techniques are powerful and enable general
 data structures to be built on NUMA architectures with low latency. While powerful these systems
-require each NUMA domain to synchronize it's log with a singular log master, it also requires
+require each NUMA domain to synchronize its log with a singular log master, it also requires
 efficient support for atomic operations like CAS. It's unclear at this point in time if these
 approaches will scale up to the expected number of NUMA domains in a disaggregated deployment due to
 the fact that their bandwidth requirements grow linearly with the number of domains.
@@ -687,7 +687,7 @@ key-value stores is to have a index with a pointer to the data, and potentially 
 collisions occur~\cite{race, clover}. Each time a pointer resolution is required the client must
 incur an additional round trip. In NUMA literature (and even for spinning disks) locality was
 identified as an important factor for performance~\cite{bbn,hopscotch}. Techniques like hop-scotch
-hashing ensure that data is close to it's hash location in physical memory. This is advantageous for
+hashing ensure that data is close to its hash location in physical memory. This is advantageous for
 RDMA systems as a single big read can guess at the location of the data and be ensured to grab it
 only incurring an additional bandwidth penalty.
 
@@ -781,6 +781,11 @@ center. In line of work routing is paramount and under-explored. \sword assumes 
 as it needs to track an entire data structure, however a future distributed model could potentially
 scale to multiple racks if the data dependent operations were routed through the correct network
 components.}
+
+The future for disaggregated systems is bright. This work has demonstrated that shared remote memory
+can be made efficient with programmable networking hardware, and that through careful design data
+structures can be adapted to to disaggregated memory. Hopefully future work will build on these
+techniques and enable a shift towards mainstream disaggregated computing.
 
 
 % \chapter{ Example Figures and such for formatting reference}
