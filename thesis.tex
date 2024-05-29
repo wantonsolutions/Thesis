@@ -53,11 +53,11 @@
 % Each member of the committee should be listed as Professor Foo Bar.
 % If Professor is not the correct title for one, then titles should be
 % omitted entirely.
-\chair{Alex C. Snoeren}
+\chair{Professor Alex C. Snoeren}
 % Your committee members (other than the chairs) must be in alphabetical order
-\committee{Amy Ousterhout}
-\committee{Yiying Zhang}
-\committee{George Papen}
+\committee{Professor Amy Ousterhout}
+\committee{Professor George Papen}
+\committee{Professor Yiying Zhang}
 \degreeyear{2024}
 
 % Start the document
@@ -172,7 +172,7 @@ pushing my limits, and Camille Moore for keeping me on my toes.
 \begin{cvlist}{}
 \item[2012-2016] Bachelor of Science, Computer Science University of British Columbia
 \item[2016-2018] Master of Science, Computer Science University of British Columbia
-\item[2018-2024] Doctor of Philosophy, Computer Science University of California, San Diego
+\item[2018-2024] Doctor of Philosophy, Computer Science University of California San Diego
 \end{cvlist}
 \end{cv}
 
@@ -212,8 +212,8 @@ https://doi.org/10.1145/3180155.3180199 \\
 %%	
 Resource disaggregation proposes a next-generation architecture for data center resources. System
 components like compute, memory, storage, and accelerators are separated from one another by a fast
-network and composed dynamically into virtual servers when required. This paradigm promises
-dramatically improved resource utilization, scalability, and flexibility, but introduces dramatic
+network and composed dynamically into virtual servers when required. This paradigm promises tyo
+dramatically improved resource utilization, scalability, and flexibility, but introduces substantial
 challenges in terms of performance and fault tolerance. Memory is among the most difficult resources
 to disaggregate. CPUs currently expect DRAM to ultra low latency, high bandwidth, and to share it's
 failure domain. In particular increased latency from network round trips dramatically shifts the
@@ -641,6 +641,10 @@ general.
 \begin{table}[h]
 	%\begin{table}[h]
 		\centering
+		\caption{Cross section of systems and techniques. Full circles
+		\fullcirc imply that a system uses the category, \halfcirc denotes when a
+		system meets the qualification in spirit but not explicitly, and \nullcirc
+		when the technique is absent. Columns OC and CC stand for Optimistic Concurrency and Compute Coalescing respectively.}
 		\begin{tabular}{ c | c | c | c | c | c | c | c | c }
 			& project & \shortstack{read \\ inflation} & \shortstack{relaxed  \\ layout} & \shortstack{pre-\\compute} & \shortstack{OC*} & \shortstack{metadata \\ caching} & \shortstack{CC*} & \shortstack{self \\ verifing}  \\ \hline
 																	%N          %R          %P          %O          %M          %C          %W          %S
@@ -665,10 +669,6 @@ general.
 			 & Mind~\cite{mind}                                              & \nullcirc & \halfcirc & \halfcirc & \nullcirc & \fullcirc & \nullcirc & \nullcirc \\ \hline
 		\end{tabular}
 	
-		\caption{Cross section of systems and techniques. Full circles
-		\fullcirc imply that a system uses the category, \halfcirc denotes when a
-		system meets the qualification in spirit but not explicitly, and \nullcirc
-		when the technique is absent. Columns OC and CC stand for Optimistic Concurrency and Compute Coalescing respectively.}
 		
 		\label{tab:re-table}
 	\end{table} 
