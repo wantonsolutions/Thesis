@@ -22,7 +22,7 @@
 %commands
 
 \newcommand{\sword}{SwordBox}
-\newcommand{\thesistitle}{Disaggregated Data Structures: Sharing and contention with RDMA and Programmable Networks}
+\newcommand{\thesistitle}{Disaggregated Data Structures: Sharing and Contention with RDMA and Programmable Networks}
 
 \usepackage{multirow}
 \usepackage{tikz}
@@ -138,13 +138,13 @@ doubtful of success, nor more dangerous to handle, than to initiate a new order 
 % be repeated at the end of the relevant chapter.
 \begin{acknowledgements}
 
-I would like to acknowledged my advisor Alex C. Snoeren for his dedication to his craft and guidance
-over the past 6 years. No piece of work within this thesis would be possible without your
+I would like to acknowledge my advisor Alex C. Snoeren for his dedication to his craft and guidance
+over the past 6 years. No piece of work within this dissertation would be possible without your
 collaboration. I would also like to thank my committee members Amy Ousterhout, Yiying Zhang, and
 George Papen for their feedback and guidance, and Srikanth Kandula for his mentorship during my time
 at MSR.
 
-This thesis has been extraordinarily influenced by Anil Yelam, my closest collaborator. Thank you
+This dissertation has been extraordinarily influenced by Anil Yelam, my closest collaborator. Thank you
 for all the time you spent working on our collaborations, and the hours spent discussing and
 debating system designs and performance results. I'm forever grateful. To Maxwell Bland, your
 research energy is unmatched and without your help we would never have have acquired any SmartNICs.
@@ -215,15 +215,15 @@ components like compute, memory, storage, and accelerators are separated from on
 network and composed dynamically into virtual servers when required. This paradigm promises tyo
 dramatically improved resource utilization, scalability, and flexibility, but introduces substantial
 challenges in terms of performance and fault tolerance. Memory is among the most difficult resources
-to disaggregate. CPUs currently expect DRAM to ultra low latency, high bandwidth, and to share it's
+to disaggregate. CPUs currently expect DRAM to have ultra low latency, high bandwidth, and to share it's
 failure domain. In particular increased latency from network round trips dramatically shifts the
 performance of existing shared data structures designed for local DRAM.
 
-In this thesis I explore the challenges of sharing disaggregated memory with hundreds of CPU cores.
+In this dissertation I explore the challenges of sharing disaggregated memory with hundreds of CPU cores.
 First in {\sword} I present a system which utilizes a centralized programmable switch to cache data
 structure state and dramatically improve key-value workload performance. Second I present a new
 key-value store RCuckoo which is designed to leverage RDMA and reduce round trips when accessed by
-CPU's over a network. Both systems demonstrate significant performance improvements over the
+CPUs over a network. Both systems demonstrate significant performance improvements over the
 existing state of the art.
 
 \end{dissertationabstract}
@@ -238,19 +238,20 @@ existing state of the art.
 argued for the simplicity of homogeneity over optimal performance, reasoning that carefully picked
 hardware at a given price point would yield the best cost-performance tradeoffs and that the
 performance yields of next generation hardware would quickly erase any gains made by specializing
-servers. 
+servers~\todo{cite}. 
 %%
-Since then both Moors law and Dennard scaling have slowed down dramatically. CPU clock speeds and
+Since then both Moore's law and Dennard scaling have slowed down dramatically. CPU clock speeds and
 memory density improvements have stagnated leaving operators to fight tooth and claw to enjoy the
 efficiency gains of prior decades. The effect is that new technologies are being introduced to to
-achieve scaling.  CPU's are now monstrously parallel. custom accelerators are common for common
-workloads like video coding, and machine learning. Indeed the modern datacenter is a hodgepodge of
-heterogeneous hardware (GPU's, TPU's, DPU's, SmartNICs and FPGA's)~\cite{nitro}, and various new
-memory offerings and tiers like NVMe. Today the same operator that argued for homogeneity would
-likely be unable to name every kind of server in their data center. At the time of writing EC2 has
-84 listed instance types~\cite{ec2-offer} for their customers to design their services. The trend is
-clear, in search of efficiency data center and server design is increasingly heterogeneous with
-servers being designed for specific applications and workloads.
+achieve scaling.  CPUs are now monstrously parallel. Custom accelerators are common for specialized
+workloads like video coding and machine learning. Indeed the modern data center is a hodgepodge of
+heterogeneous hardware (GPU's, TPU's, DPU's, SmartNICs and
+FPGA's)~\cite{dsnf,azure-smartnic,tpu,nitro}, and various new memory offerings and tiers like
+NVMe~\cite{decible}.  Today the number of server types in a data center, conservatively, is in the
+dozens.  At the time of writing EC2 has 84 listed instance types~\cite{ec2-offer} for their
+customers to design their services. The trend is clear: in search of efficiency data center and
+server design is increasingly heterogeneous with servers being designed for specific applications
+and workloads.
 
 Resource disaggregation is a new architectural paradigm for data center resources aimed at improving
 efficiency and managing increased heterogeneity. In the disaggregated model a servers resources do
@@ -271,7 +272,7 @@ simple bin packing problem. Consider 2 servers both provisioned with 4GB of DRAM
 which requires 2.5GB of memory. In a monolithic design a scheduler can only place one job per
 machine or risk swapping to disk. In a disaggregated model the 4GB of memory would be placed in an
 8GB pool which could easily subdivided into 3 2.5GB partitions. In the monolithic case the unused
-memory is stranded, pooling reclaims stranded memory.  More concretely at datacenter levels
+memory is stranded, pooling reclaims stranded memory.  More concretely at data center levels
 practitioners have to provision their servers for the sum of peak demand, when resources are pooled
 they can be provisioned for the peak of the sum of demand which can be significantly
 lower~\cite{supernic, dsnf}.
@@ -292,7 +293,7 @@ coherence between remote cores is required leads to abysmal performance degradat
 latencies in some cases). Further complicating the design of shared data structures is that memory,
 once in a single fault domain, can fail ripping a hole directly into a processes address space.
 
-This thesis explores the design of shared data structures in disaggregated memory systems.  I
+This dissertation explores the design of shared data structures in disaggregated memory systems.  I
 present two systems ({\sword} and RCuckoo) which focus on the challenges of sharing and contending
 access to remote memory. {\sword} (Chapter~\ref{chap:swordbox}) is a middlebox approach for removing
 contention from shared data structures. The high level insight behind {\sword} is to leverage the
@@ -348,7 +349,7 @@ over RDMA has a nearly 20x overhead compared to local access. Despite this overh
 the strongest contenders for a disaggregated transport.  CXL is a burgeoning technology which
 promises NUMA like latencies for remote memory access~\cite{cxl}. At the time of writing CXL is not
 widely available and its performance and scalability are not well understood. Regardless of
-interconnect the principle of access latency remains the same. This thesis focuses on RDMA although
+interconnect the principle of access latency remains the same. This dissertation focuses on RDMA although
 we see the algorithms and data structures presented here to be largely interconnect independent.
 
 
@@ -374,7 +375,7 @@ receiving NIC (in the case of a write), issues the DMA to the remote machine's m
 interacting with its CPU.  The example above is only a high level overview of an RDMA write, the
 RDMA protocol is deeply complex. The current infiniband RDMA specification is over 1700
 pages~\cite{infiniband-spec}. In this section I will briefly cover the most important aspects of
-RDMA for the purposes of this thesis.
+RDMA for the purposes of this dissertation.
 
 \subsection{One-Sided Verbs}
 
@@ -443,7 +444,7 @@ provide thin operating systems which allow users to develop and deploy code, eit
 programmable devices are powerful and transformational tools for designing network systems as they
 can offer orders of magnitude performance improvements when deployed in the right
 context~\cite{when-computer}, such as sequencing where it has show to offer huge benefits for
-consensus~\cite{eris, nopaxos}. In this thesis we leverage the power of programmable switches to
+consensus~\cite{eris, nopaxos}. In this dissertation we leverage the power of programmable switches to
 exactly this benefit to get fast in-network serialization for RDMA based data structures (Section
 ~\ref{chap:swordbox}).
 
@@ -641,9 +642,8 @@ general.
 \begin{table}[h]
 	%\begin{table}[h]
 		\centering
-		\caption{Cross section of systems and techniques. Full circles
-		\fullcirc imply that a system uses the category, \halfcirc denotes when a
-		system meets the qualification in spirit but not explicitly, and \nullcirc
+		\caption{Cross section of systems and techniques. Full circles~{\fullcirc} imply that a system uses the category, ~{\halfcirc}  denotes when a
+		system meets the qualification in spirit but not explicitly, and ~{\nullcirc}  
 		when the technique is absent. Columns OC and CC stand for Optimistic Concurrency and Compute Coalescing respectively.}
 		\begin{tabular}{ c | c | c | c | c | c | c | c | c }
 			& project & \shortstack{read \\ inflation} & \shortstack{relaxed  \\ layout} & \shortstack{pre-\\compute} & \shortstack{OC*} & \shortstack{metadata \\ caching} & \shortstack{CC*} & \shortstack{self \\ verifing}  \\ \hline
@@ -724,7 +724,7 @@ and made highly efficient by applying these techniques.
 
 \chapter{Conclusion}
 
-This thesis proposes two systems for sharing remote memory. {\sword}, a programmable switch based
+This dissertation proposes two systems for sharing remote memory. {\sword}, a programmable switch based
 caching system which removes contention from existing disaggregated programs, and RCuckoo a cuckoo
 hash designed specifically for one-sided RDMA access. Both systems push the performance and
 scalability limits of shared disaggregated data structures at two points in the design space (with
