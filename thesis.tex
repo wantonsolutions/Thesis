@@ -367,49 +367,61 @@ independent.
 \section{RDMA}
 
 Remote direct memory access (RDMA) is a low latency, high bandwidth network protocol. It achieves
-high performance by bypassing multiple overheads common to a traditional networking stack (ex Linux
-Sockets). Firstly RDMA is a kernel bypass technology. It allows user space applications to directly
-interact with the network interface card (NIC). This removes two distinct overheads, context
-switching and data copy to the kernel. Second, RDMA's most distinguishing feature is that it
-offloads much of the network stack to the NIC hardware, and bypasses the CPU entirely for data
+high performance by bypassing multiple overheads common to a traditional networking stack (e.g.
+Linux Sockets). 
+%%
+Firstly RDMA is a kernel-bypass technology. It allows userspace applications to directly interact
+with the network interface card (NIC) taking advantage of NIC specific features like on-nic
+caches~\cite{sherman} and avoiding context switch overheads.
+%%
+Second, RDMA's most distinguishing feature is that it
+offloads much of the network stack to the NIC hardware and bypasses the CPU entirely for data
 transfer. As an example, in a traditional networking stack if a process sends a UDP message on an
 existing socket the user first marshals the data and then submits it to the kernel via a
-\textit{send}. The kernel then copies the data out of user space, sets up the packet header, and
-submits the packet to the NIC. In contrast with RDMA the user space application registers a region
+\textit{send}. The kernel then copies the data out of user-space, sets up the packet header, and
+submits the packet to the NIC. In contrast with RDMA the user-space application registers a region
 of memory with the NIC prior to sending data. If an application wants to transfer the data in that
 region to a remote machine it passes a pointer to the data, and the data's size to the NIC along
-with the remote machines's address, and the action the NIC should take (read, write, ect). The
+with the remote machines's address, and the action the NIC should take (read, write, atomic). The
 application sends by calling a special \textit{rdma send}. This operation is non-blocking and sends
-a signal to the NIC which then DMA's the memory out of the processes address space, constructs a
+a signal to the NIC which then DMAs the memory out of the processes address space, constructs a
 packet on the NIC (including managing transport state) and sends directly to another machine. The
-receiving NIC (in the case of a write), issues the DMA to the remote machine's memory without ever
-interacting with its CPU.  The example above is only a high level overview of an RDMA write, the
-RDMA protocol is deeply complex. The current infiniband RDMA specification is over 1700
-pages~\cite{infiniband-spec}. In this section I will briefly cover the most important aspects of
+receiving NIC (in the case of a write) issues the DMA to the remote machine's memory without ever
+interacting with its CPU.  
+%%
+\todo{summarize the example (amy)}
+The example above is only a high-level overview of an RDMA write, the
+RDMA protocol is deeply complex. The current infiniband RDMA specification is over 1,700
+pages~\cite{infiniband-spec}. In this section I briefly cover the most important aspects of
 RDMA for the purposes of this dissertation.
 
-\subsection{One-Sided Verbs}
+\section{One-Sided Verbs}
+%%
+\todo{Amy -This subsubsectio (1.2.1) covers a lot of different topics and it’s not clear which ones
+matter. Can you provide a bit more structure/ organization to help the reader understand the key
+points? }
+%%
+The RDMA specification provides five service types (Reliable Connection, Unreliable Connection,
+Reliable Datagram, Unreliable Datagram, RAW Datagram). Additionally RDMA provides \textit{Verbs};
+actions the NIC can take which vary by service type. Reliable services provide acknowledgements and
+connection services provide sequence numbers, in-order delivery, and retransmission. Reliable
+connections provide the strongest guarantees and allow for the use of \textit{one-sided} verbs which
+implement memory-like semantics. One-sided verbs entirely bypass the CPU of the remote machine and
+allow a client to directly read, write, and atomically modify the remote hosts memory. This ability
+makes RDMA a powerful tool for designing disaggregated systems, especially memory systems as it
+allows designers to build with the assumption that memory is passive, i.e. no remote CPU exists. 
 
-The RDMA specification provides 5 service types (Reliable Connection, Unreliable Connection,
-Reliable Datagram, Unreliable Datagram, RAW Datagram). Additionally RDMA provides \textit{Verbs}
-actions the NIC can take, which vary by service type. Reliable services provide acknowledgements and
-connection services provide sequence numbers, in-order delivery, and retransmission. Service type
-determines which verbs are available for use. Reliable connections provide the strongest guarantees
-and allow for the use of \textit{one-sided} verbs which implement memory-like semantics. One sided
-verbs entirely bypass the CPU of the remote machine and allow a client to directly read, write, and
-atomically modify the remote hosts memory. This ability makes RDMA a powerful tool for designing
-disaggregated systems, especially memory systems as it allows designers to build with the assumption
-that memory is passive i.e no remote CPU exists. This prototyping ability is quintessential for
-understanding how future disaggregated systems will perform.
+% This prototyping ability is quintessential for understanding how future disaggregated systems will
+% perform.
 
-The memory semantics of one sided RDMA are complex. Not all verbs respect ordering even on the same
+The memory semantics of one-sided RDMA are complex. Not all verbs respect ordering even on the same
 connection. RDMA provides a variety of configurations to gain ordering both on and across
 connections. Queue pairs (QPs) are connection handles for RDMA. Verbs are issued on a QP and QP are
-polled for responses. QP's provided in-order delivery, but not necessarily in-order completion. For
-instance issuing a read prior to a write may see the results of the write. Across QP no ordering is
+polled for responses. QPs provide in-order delivery, but not necessarily in-order completion. For
+instance issuing a read prior to a write may see the results of the write. Across QPs no ordering is
 guaranteed by default. RDMA provides two atomic operations compare and swap (CAS) and fetch and add
-(FAA) for atomic modification of 64 bit regions of remote memory. The RDMA advanced transport
-supports masked versions of these operations to allow for high density atomic regions while reducing
+(FAA) for atomic modification of 64-bit regions of remote memory. The RDMA advanced transport
+supports masked versions of these operations to allow for high-density atomic regions while reducing
 contention~\cite{rdma-masked-cas}. These atomic operations are the critical component for building
 shared disaggregated systems. They enable the construction of locks and semaphores, as well as
 lock-free data structures.
@@ -417,7 +429,7 @@ lock-free data structures.
 \section{CXL}
 
 RDMA is not the only proposal for disaggregated memory. The Compute Express Link (CXL) is a new
-interconnect and standard supported by chip manufacturers and hyperscalers. CXL is built on PCIe and
+interconnect and standard supported by chip manufacturers and hyperscalers~\cite{cxl}. CXL is built on PCIe and
 aims to expand CPU memory capacity by allowing for the attachment of remote memory devices. Despite
 only a few CXL devices being available at the time of writing the technology is promising. Initial
 work has shown that CXL latencies for remote memory devices are between 2-5x the latency of local
@@ -432,31 +444,36 @@ scalability of a CXL switch (likely rack scale). Finally CXL does not, at the ti
 support in-network programmability. As we will show in our work in Chapter~\ref{chap:swordbox}
 in-network programmability is a powerful tool for reducing contention in shared data structures, the
 lack of any programmable devices in network may limit the ability to effectively share CXL devices.
+
+\todo{Alex - non sequitur}
 Prior work on remote memory data structures indicated that allowing CPU cores to subscribe to
 \textit{notify} groups could reduce the price of coherence while enabling fast shared
 structures~\cite{aguilera2019designing}. While notifications are not natively supported by CXL, CXL
 devices could be designed to support them without the need to build CXL programmable network
 devices. 
 
-Alternatively techniques for NUMA scalability may also apply to remote such as black box approaches
-for NUMA data structures~\cite{bbn,nros,ironsync}. These techniques are powerful and enable general
-data structures to be built on NUMA architectures with low latency. While powerful these systems
-require each NUMA domain to synchronize its log with a singular log master, it also requires
-efficient support for atomic operations like CAS. It's unclear at this point in time if these
-approaches will scale up to the expected number of NUMA domains in a disaggregated deployment due to
-the fact that their bandwidth requirements grow linearly with the number of domains.
+\todo{Alex - Move this elsewhere}
+Alternatively techniques for NUMA scalability may also apply to remote memory such as black box
+approaches for NUMA data structures~\cite{bbn,nros,ironsync}. These techniques are powerful and
+enable general data structures to be built on NUMA architectures with low latency. While powerful
+these systems require each NUMA domain to synchronize its log with a singular log master, it also
+requires efficient support for atomic operations like CAS. It's unclear at this point in time if
+these approaches will scale up to the expected number of NUMA domains in a disaggregated deployment
+due to the fact that their bandwidth requirements grow linearly with the number of domains.
 
 \section{Programable Networks}
 
 The past decade has seen the rise of programmable network devices. These devices are capable of
-executing users code often at line rate. A huge variety of devices exist: SmartNICs~\cite{fairnic},
-DPUs, FPGAs, and programmable switches~\cite{p4} from a wide variety of vendors. Often these devices
+executing users' code often at line rate. A huge variety of devices exist:
+SmartNICs~\cite{fairnic,e3,ipipe,floem}, DPUs~\cite{dsnf},
+FPGAs~\cite{azure-smartnic,clio,catapult,supernic}, and programmable
+switches~\cite{p4,netchain,netcache,netlock} from a wide variety of vendors. Often these devices
 provide thin operating systems which allow users to develop and deploy code, either C or P4. These
 programmable devices are powerful and transformational tools for designing network systems as they
 can offer orders of magnitude performance improvements when deployed in the right
 context~\cite{when-computer}, such as sequencing where it has show to offer huge benefits for
-consensus~\cite{eris, nopaxos}. In this dissertation we leverage the power of programmable switches to
-exactly this benefit to get fast in-network serialization for RDMA based data structures (Section
+consensus~\cite{eris, nopaxos}. In this dissertation we leverage the power of programmable switches
+to exactly this benefit to get fast in-network serialization for RDMA based data structures (Section
 ~\ref{chap:swordbox}).
 
 Programmable switches differ from other programmable network devices in that they have orders of
