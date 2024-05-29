@@ -254,11 +254,12 @@ server design is increasingly heterogeneous with servers being designed for spec
 and workloads.
 
 Resource disaggregation is a new architectural paradigm for data center resources aimed at improving
-efficiency and managing increased heterogeneity. In the disaggregated model a servers resources do
-not monolithic reside in a 1, 2, or 4U server form factor, instead each resource i.e compute,
-memory, storage is dedicated to a single machine and interconnected via a fast network. Servers are
-composed dynamically from these resources which enables them to be provisioned for their exact
-purpose. This model enables resource pooling and sharing which in turn leads to higher efficiency.
+efficiency and managing increased heterogeneity. In the disaggregated model a server's resources do
+not monolithicly reside in a 1, 2, or 4U server form factor, instead each resource, i.e compute,
+memory, storage is deployed separately to a dedicated machine and interconnected via a fast network.
+Servers are composed dynamically from these resources which enables them to be provisioned for their
+exact purpose~\cite{dis-and-app,infiniswap,blade-server,decible,legoos}. This model enables resource
+pooling and sharing which in turn leads to higher efficiency~\cite{regions,fastswap,dsnf,aifm,supernic,ditto}.
 
 % DRAM in particular has quickly become a precious resource in the data center. Main memory capacity,
 % while growing has not kept up with CPU core counts. The result is that per-core memory capacity is
@@ -267,12 +268,12 @@ purpose. This model enables resource pooling and sharing which in turn leads to 
 % software to manage them are still undecided.
 
 DRAM in particular has become a precious resource in data centers and is a focused target for
-resource pooling~\cite{micron-memorywall}. The benefits of pooling are clear when examining a
-simple bin packing problem. Consider 2 servers both provisioned with 4GB of DRAM and 3 jobs each of
+resource pooling~\cite{micron-memorywall}. The benefits of pooling are clear when examining a simple
+bin packing problem. Consider two servers both provisioned with 4GB of DRAM and three jobs each of
 which requires 2.5GB of memory. In a monolithic design a scheduler can only place one job per
 machine or risk swapping to disk. In a disaggregated model the 4GB of memory would be placed in an
-8GB pool which could easily subdivided into 3 2.5GB partitions. In the monolithic case the unused
-memory is stranded, pooling reclaims stranded memory.  More concretely at data center levels
+8GB pool which could be easily subdivided into 3 2.5GB partitions. In the monolithic case the unused
+memory is stranded, while pooling reclaims stranded memory.  More concretely at data center levels
 practitioners have to provision their servers for the sum of peak demand, when resources are pooled
 they can be provisioned for the peak of the sum of demand which can be significantly
 lower~\cite{supernic, dsnf}.
@@ -280,7 +281,7 @@ lower~\cite{supernic, dsnf}.
 Disaggregation is only possible because of new fast and programmable networks. Commodity NICs now
 offer 400Gbps with expectations for continued growth, and network devices are increasingly
 programmable with multiple vendors offering programable SmartNICs, DPUs and switches.  These two
-trends have lead to intra rack latencies of 1-2us and network bandwidths on the same order as memory
+trends have lead to intra rack latencies of 1-2{$\mu$}s and network bandwidths on the same order as memory
 bandwidths with the ability to inspect, cache, and modify packets in flight at line rate.
 %%
 But if disaggregation were easy it would have been done already, \textit{and it some cases it has}.
