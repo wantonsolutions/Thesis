@@ -271,28 +271,28 @@ DRAM in particular has become a precious resource in data centers and is a focus
 resource pooling~\cite{micron-memorywall}. The benefits of pooling are clear when examining a simple
 bin packing problem. Consider two servers both provisioned with 4GB of DRAM and three jobs each of
 which requires 2.5GB of memory. In a monolithic design a scheduler can only place one job per
-machine or risk swapping to disk. In a disaggregated model the 4GB of memory would be placed in an
+machine or risk swapping to disk. In a disaggregated model the 4GB of memory could be placed in an
 8GB pool which could be easily subdivided into 3 2.5GB partitions. In the monolithic case the unused
 memory is stranded, while pooling reclaims stranded memory.  More concretely at data center levels
 practitioners have to provision their servers for the sum of peak demand, when resources are pooled
 they can be provisioned for the peak of the sum of demand which can be significantly
 lower~\cite{supernic, dsnf}.
 
-Disaggregation is only possible because of new fast and programmable networks. Commodity NICs now
-offer 400Gbps with expectations for continued growth, and network devices are increasingly
-programmable with multiple vendors offering programable SmartNICs, DPUs and switches.  These two
-trends have lead to intra rack latencies of 1-2{$\mu$}s and network bandwidths on the same order as memory
-bandwidths with the ability to inspect, cache, and modify packets in flight at line rate.
-%%
-But if disaggregation were easy it would have been done already, \textit{and it some cases it has}.
-Storage, has seen widespread disaggregation. The key enabling factor is that storage device access
+Disaggregation is only possible because of new fast networks. Commodity NICs now offer 400Gbps with
+expectations for continued growth, and network devices are increasingly programmable with multiple
+vendors offering programable SmartNICs, DPUs and switches.  These two trends have lead to intra rack
+latencies of 1-2{$\mu$}s and network bandwidths on the same order as memory bandwidths with the
+ability to inspect, cache, and modify packets in flight at line rate.
+
+Storage has seen widespread disaggregation. The key enabling factor is that storage device access
 latency is far higher than a network round trip. In the case of memory the opposite is true. Memory
 access latency is 20x lower than an RTT effectively making it a separate tier of memory when placed
 across a network.  This performance gap plays out in dramatic fashion when porting data structures
 designed for local memory to far memory systems. Sharing data between multiple remote machines where
 coherence between remote cores is required leads to abysmal performance degradation (300x tail
-latencies in some cases). Further complicating the design of shared data structures is that memory,
-once in a single fault domain, can fail ripping a hole directly into a processes address space.
+latencies in some cases)(Chapter~\ref{chap:swordbox}). Further complicating the design of shared
+data structures is that memory, once in a single fault domain, can fail ripping a hole directly into
+a processes address space~\cite{amanda-hotnets,hydra,legoos}.
 
 This dissertation explores the design of shared data structures in disaggregated memory systems.  I
 present two systems ({\sword} and RCuckoo) which focus on the challenges of sharing and contending
@@ -303,12 +303,12 @@ fact that at rack-scale TORs have a serialized view of traffic to and from serve
 %%
 Second I present RCuckoo (Chapter~\ref{chap:rcuckoo}) a fully disaggregated key-value store. RCuckoo
 is specially designed to improve key-value locality. Using locality sensitive hashing RCuckoo
-improves, reads, writes, locking and fault recovery performance buy reducing the overall number of
+improves reads, writes, locking and fault recovery performance by reducing the overall number of
 round trips required for each operation.
 %%
 {\sword} yields orders of magnitude improvements in both
 throughput (up to 30x) and tail latency (up to 300x).  RCuckoo meets or exceeds the performance of
-all state of the art disaggregated key-value stores on small key-value pairs and significantly
+all state-of-the art disaggregated key-value stores on small key-value pairs and significantly
 outperforms other systems on read-mostly workloads.
 
 \end{dissertationintroduction}
