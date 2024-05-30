@@ -730,7 +730,7 @@ only incurring an additional bandwidth penalty.
 
 The second trend we identified is that pushing computation to the client can save a significant
 amount of time in place of locality. Page tables are difficult to port to remote memory as each
-level of indirection requires a round trip. Clio introduced the idea of a flat page table. Their
+level of indirection requires a round trip. Clio introduced the idea of a flat page table~\cite{clio}. Their
 insight is that when creating a virtual address space the virtual address itself is not critical.
 Rather than handle multiple levels of page tables they push the complexity to the allocation
 function. When allocating in Clio the allocator uses a flat hash based page table with a single look
@@ -738,11 +738,11 @@ up. The table avoids collisions by iteratively generating virtual addresses unti
 which does not cause a hash table collision. This \textit{pre-computation} technique is powerful as
 it allows for a single round trip for getting remote memory allocations.
 
-Table~\ref{tab:re-table} lists multiple other techniques which cross cut the literature. We believed
-that techniques such as precomputation and locality could be used to improve the performance of
-existing data structures. We designed our next system RCuckoo with the intuition that cuckoo
-hashing, which had already been studied in the context of RDMA key-value stores, could be improved
-and made highly efficient by applying these techniques.
+Table~\ref{tab:re-table} ~\todo{Amy - Be more specific} lists multiple other techniques which cross
+cut the literature. We believed that techniques such as precomputation and locality could be used to
+improve the performance of existing data structures. We designed our next system RCuckoo with the
+intuition that cuckoo hashing, which had already been studied in the context of RDMA key-value
+stores, could be improved and made highly efficient by applying these techniques.
 
 
 \input{rcuckoo/intro}
