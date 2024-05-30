@@ -612,8 +612,6 @@ implement any number of memory side network functions.
 \chapter{Swordbox: Accelerated Sharing of Disaggregated Memory}
 \label{chap:swordbox}
 
-\section{Overview}
-
 Proposals for disaggregated memory systems often forgo sharing entirely in favor of partitioned
 regions~\cite{infiniswap,fastswap,leap,legoos,blade}. Each of these proposals cuts at a fundamental
 goal of remote memory which is to increase capacity via pooling and reduce the need to increase CPU
@@ -642,11 +640,11 @@ rather than a CPU, prior projects like Clio~\cite{clio}, SuperNIC~\cite{supernic
 Prism~\cite{prism} suggested that network functions were a good fit for smartNICs and that they
 could be used to implement \textit{close to memory} operations like pointer chasing. While we
 agreed, individual NICs could not provide rack-scale coherence -- in order to provide a rack-scale
-uniform memory machine we would need to think about a centralized solution. A programmable switch is
-an ideal candidate for this role as it sees all of the traffic in a rack and can enforce global
-ordering. Our goal in this project was to design a system which could provide a full upper bound on
-the performance achievable by a disaggregated shared memory system as a benchmark for future systems
-to compare to.
+uniform memory machine we would need to think about a mechanism which could provide a global total
+order to all operations. A programmable switch is an ideal candidate for this role as it sees all of
+the traffic in a rack and can enforce global ordering. Our goal in this project was to design a
+system which could provide a full upper bound on the performance achievable by a disaggregated
+shared memory system as a benchmark for future systems to compare to.
 
 
 \input{swordbox/intro}
@@ -660,18 +658,21 @@ to compare to.
 
 \chapter{Disaggregated Cuckoo Hashing}
 \label{chap:rcuckoo}
-\section{Overview}
 
-While \sword provides an upper bound on the performance of a shared remote memory system, it is not
-a general purpose solution. While \sword is able to provide faster locking and faster optimistic
-concurrency it does not handel all data structure, and more importantly, requires the addition of a
-programable switch to the network. The need for programmable hardware is a significant barrier to
-entry for many data center operators, and while we believe that for the most performance stringent
-applications the cost is worth it, we also believe that alternative solutions may be better for
-average operators given their current deployments. Part of our exploration during \sword was to
-investigate data structures which would be a good fit for middlebox interposition, during this
-research we also explored data structures and techniques which were amenable to disaggregation in
-general.
+While {\sword} provides an \todo{Alex: Upper bound is a claim} upper bound on the performance of a
+shared remote memory system, it is not a general purpose solution. While \sword is able to provide
+faster locking and faster optimistic concurrency it does not handle all data structure and more
+importantly, requires the addition of a programable switch to the network. The need for programmable
+hardware is a significant barrier to entry for many data center operators, and while we believe that
+for the most performance stringent applications the cost is worth it, we also believe that
+alternative solutions may be better for average operators given their current deployments. 
+%%
+
+\todo{Alex: A bit too meta}
+Part of
+our exploration during \sword was to investigate data structures which would be a good fit for
+middlebox interposition, during this research we also explored data structures and techniques which
+were amenable to disaggregation in general.
 
 
 \begin{table}[h]
@@ -715,6 +716,7 @@ high latency memory and techniques on how to mitigate their cost, and RDMA key-v
 explored both techniques for high performance RDMA and how to reduce the need for serialization down
 to a few fast operations~\cite{cuckoo-improvements}.
 
+\todo{move to the background chapter}
 A number of threads stood out to us during our review. Perhaps the most important is that data
 locality can dramatically improve performance~\cite{farm}. One of the biggest performance killers
 are the additional round trips required to resolve indirect pointers. A common design pattern in
@@ -763,7 +765,7 @@ This dissertation proposes two systems for sharing remote memory. {\sword}, a pr
 caching system which removes contention from existing disaggregated programs, and RCuckoo a cuckoo
 hash designed specifically for one-sided RDMA access. Both systems push the performance and
 scalability limits of shared disaggregated data structures at two points in the design space (with
-and without programmable network devices). \sword demonstrates how caching can be used to remove
+and without programmable network devices). {\sword} demonstrates how caching can be used to remove
 contention entirely and achieve performance equal to the underlying network capabilities. RCuckoo
 demonstrates that by carefully constructing algorithms we can increase locality and take advantage
 of features in commodity network hardware (large sequential RDMA reads, and on-NIC lock tables).
@@ -775,16 +777,16 @@ could potentially be used with a less generic programming interface such as open
 demonstrated by netkv~\cite{netkv} however the data structures may require serious redesign to adapt
 to openflows limited programming model.
 
-Many off the shelf ARM based or FPGA based smartNICs could be used to implement \sword as well as
+Many off-the-shelf ARM based or FPGA based smartNICs could be used to implement {\sword} as well as
 more complex data structures. While SmartNICs lack a global view of a rack, ARM based smartNICs do
 have a global view of the machine they are attached to and could be used to implement similar
 caching strategies. SmartNICs typically have much more available memory than programmable switches
-and could likely handel much larger data structures than \sword. The example used at multiple points
-throughout this work for a \textit{difficult} data structure for \sword to deal with is insert into
+and could likely handel much larger data structures than {\sword}. The example used at multiple points
+throughout this work for a \textit{difficult} data structure for {\sword} to deal with is insert into
 a linked list (because the entire linked list needs to be stored in memory). This is unlikely to be
 the same on a smartNIC with a few GB of memory. SmartNICs could be used to cache index structures
 for large structures like B-Tress and use their limited compute to steer read and write requests
-similar to \sword. More generically they could be used for some of the simple functions which are
+similar to {\sword}. More generically they could be used for some of the simple functions which are
 difficult to implement in remote memory such as an allocator, or scheduler which needs to maintain
 centralized state.
 
@@ -798,7 +800,7 @@ unimplementable. Simultaneously CAS and FAA are limited width.  Extensions for l
 would enable more efficient data structures such as in the case of RACE, and FUSEE which must limit
 the size of its key-value pairs due to the lack of space in the 64 bit RDMA CAS.
 
-Network-datastructure codesign is a powerful, but under explored area. In the case of \sword Clover
+Network-datastructure codesign is a powerful, but under explored area. In the case of {\sword} Clover
 was a good fit for the system as only the tail pointer of linked lists needed to be stored on the
 switch. Other data structures do not always exhibit this property. Log based or append only data
 structures have promise here as the point of contention (the end of the log) can be managed with
@@ -812,7 +814,7 @@ latencies get lower and lower, and disaggregated technology gets better intra-ra
 become more tennable. An early example is \textit{Disaggregating Stateful Network
 Functions}~\cite{dsnf} and \textit{SuperNIC}\cite{supernic} which take the stance that a large pool
 of dedicated accelerators can provide a significant portion of the network functions for a data
-center. In line of work routing is paramount and under-explored. \sword assumes a centralized model
+center. In line of work routing is paramount and under-explored. {\sword} assumes a centralized model
 as it needs to track an entire data structure, however a future distributed model could potentially
 scale to multiple racks if the data dependent operations were routed through the correct network
 components.}
