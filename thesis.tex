@@ -384,116 +384,128 @@ makes RDMA the key enabling technology for disaggregation. A receiver can expose
 memory without requiring a CPU to manage the transfer.
 
 The following example illustrates the difference between sending and receiving with a traditional
-Unix api vs the sequence of operations with RDMA. In a traditional networking stack if a process
+Unix API vs the sequence of operations with RDMA. In a traditional networking stack if a process
 sends a UDP message on an existing socket the user first marshals the data and then submits it to
 the kernel via a \textit{send}. The kernel then copies the data out of user-space, sets up the
 packet header, and submits the packet to the NIC. 
 %%
-In contrast with RDMA the user-space application
-registers a region of memory with the NIC prior to sending data. If an application wants to transfer
-the data in that region to a remote machine it passes a pointer to the data, and the data's size to
-the NIC along with the remote machines's address, and the action the NIC should take (read, write,
-atomic). The application sends by calling a special \textit{rdma send}. This operation is
-non-blocking and sends a signal to the NIC which then DMAs the memory out of the processes address
-space, constructs a packet on the NIC (including managing transport state) and sends directly to
-another machine. The receiving NIC (in the case of a write) issues the DMA to the remote machine's
-memory without ever interacting with its CPU.  
+In contrast with RDMA the user-space application registers a region of memory with the NIC prior to
+sending data. If an application wants to transfer the data in that region to a remote machine it
+passes a pointer to the data, and the data's size to the NIC along with the remote machines's
+address, and the action the NIC should take (verbs). The application sends by calling a special
+\textit{rdma send}. This operation is non-blocking and sends a signal to the NIC which then DMAs the
+memory out of the processes address space, constructs a packet on the NIC (including managing
+transport state) and sends directly to another machine. The receiving NIC (in the case of a write)
+issues the DMA to the remote machine's memory without ever interacting with its CPU.  
 %%
-\todo{summarize the example (amy)} The example above is only a high-level overview of an RDMA write,
-the RDMA protocol is deeply complex. The current infiniband RDMA specification is over 1,700
-pages~\cite{infiniband-spec}. In this section I briefly cover the most important aspects of RDMA for
-the purposes of this dissertation.
+The example above is only a high-level illustration of CPU bypass for RDMA write.  the RDMA protocol
+is deeply complex with a variety of different connection types and verbs. The current infiniband
+RDMA specification is over 1,700 pages~\cite{infiniband-spec}. In this section I briefly cover the
+most important aspects of RDMA for the purposes of this dissertation.
+
 
 \subsection{RDMA Connections}
 
-When run over Ethernet using the RoCEv2
-standard, RDMA NICs located on client and server can cooperate to
-implement congestion~\cite{hpcc,dcqcn} and flow control, reliable
-delivery, and at-most-once delivery semantics.  Before exchanging
-data, RDMA end points establish a queue pair (QP) which defines the
-region(s) of memory each is able to access.  Like Internet transport
-protocols, RDMA queue pairs provide a configurable set of semantics
-depending on the transport mode selected: UDP-like semantics are
-provided by unreliable datagram (UD) and unreliable connections (UC),
-while reliable connections (RC) are similar to TCP, ensuring reliable,
-in-order delivery.  Moreover, reliable connections support so-called
-\emph{1-sided} verbs (e.g., read, write, and compare-and-swap) that
-are executed autonomously by the remote NIC without any remote CPU
-involvement.
+When run over Ethernet using the RoCEv2 (RDMA over Converged Ethernet) standard, RDMA NICs located
+on client and server can cooperate to implement congestion~\cite{hpcc,dcqcn} and flow control,
+reliable delivery, and at-most-once delivery semantics.  Before exchanging data, RDMA end points
+establish a queue pair (QP) which defines the region(s) of memory each is able to access.  Like
+Internet transport protocols, RDMA queue pairs provide a configurable set of semantics depending on
+the transport mode selected: UDP-like semantics are provided by unreliable datagram (UD) and
+unreliable connections (UC), while reliable connections (RC) are similar to TCP, ensuring reliable,
+in-order delivery.  Moreover, reliable connections support so-called \emph{1-sided} verbs (e.g.,
+read, write, and compare-and-swap) that are executed autonomously by the remote NIC without any
+remote CPU involvement.
 
-The benefits of the various transport modes and
-1-vs-2-sided verbs has been a topic of intense debate.  While reliable
-connections provide enhanced guarantees, their implementation requires
-on-NIC memory, a precious resource, and researchers have observed
-scalability bottlenecks due to memory and cache limitations in the
-Mellanox ConnectX family of RDMA
-NICs~\cite{farm,fasst,erpc,lite,design-guidelines}.  Recent work has
-shown how to overcome limits in terms of the number of
-connections~\cite{storm,flock}, but the ordering guarantees provided
-by RC remain restricted to individual queue pairs.  While unreliable
-transport modes can deliver superior performance and
-scalability~\cite{fasst}, they require the use of 2-sided
-verbs---i.e., involvement of a CPU at the memory server---to ensure
-ordering, a non-starter for passive disaggregated settings.  Unless
-hardware support for more sophisticated 1-sided verbs~\cite{filemr,rma,star}
+The benefits of the various transport modes and 1-vs-2-sided verbs has been a topic of intense
+debate.  While reliable connections provide enhanced guarantees, their implementation requires
+on-NIC memory, a precious resource, and researchers have observed scalability bottlenecks due to
+memory and cache limitations in the Mellanox ConnectX family of RDMA
+NICs~\cite{farm,fasst,erpc,lite,design-guidelines}.  Recent work has shown how to overcome limits in
+terms of the number of connections~\cite{storm,flock}, but the ordering guarantees provided by RC
+remain restricted to individual queue pairs.  While unreliable transport modes can deliver superior
+performance and scalability~\cite{fasst}, they require the use of 2-sided verbs---i.e., involvement
+of a CPU at the memory server---to ensure ordering, a non-starter for passive disaggregated
+settings.  Unless hardware support for more sophisticated 1-sided verbs~\cite{filemr,rma,star}
 becomes available, another approach is required.
 
+The memory semantics of one-sided RDMA are complex. While RC provides in-order delivery of messages
+different verbs have their own ordering semantics. For instance issuing a read prior to a write may
+see the results of the write. Across QPs no ordering is guaranteed by default. The effect of these
+semantics are that system designers must be very careful with how they use RDMA. If a read is issued
+on the same address as a write before waiting for the write to complete the user must specify a
+fence flag in the read operation. Across QPs the lack of ordering means that partially written data
+is visible to other QP's a common tactic is to accompany writes with CRC's to enable the readers to
+verify the data's integrity. When serialization is required across QP the only available mechanism
+are RDMA atomic operations.
 
-\subsection{Atomic Verbs}
 
-%%
-Atomic operations such as compare-and-swap (CAS) are essential for
-implementing locks or opportunistic concurrency. Atomics are limited
-to 64-bit operations and bottleneck at lower rates than reads and
-writes because they block requests on data-dependent addresses while
-waiting on PCIe round trips~\cite{design-guidelines,sherman}.
-Figure~\ref{fig:rdma_concur} shows that the NICs in our testbed
-(100-Gbps NVIDIA Mellanox ConnectX-5s) are capable of serving many 10s of
-millions of RDMA operations per second (limited only by link speed),
-but CAS operations to remote server memory top out around 50 MOPS.  Hence, we employ atomic operations judiciously in RCuckoo.
+
+\subsection{RDMA Verbs on Mellanox NICs}
+
+While RDMA is a generic protocol the NICs used throughout this dissertation are Mellanox ConnectX-5.
+While these NICs implement the base specification of RDMA they also provide a number of addition
+features outside the infiniband specification which can be exploited for performance gains.  In this
+section I describe RDMA verbs and their performance characteristics on Mellanox NICs with a specific
+focus on atomic operations.
+
+Atomic verbs such as compare-and-swap (CAS) and fetch-and-add (FAA) are essential for implementing
+locks or opportunistic concurrency. Atomics are limited to 64-bit operations and bottleneck at lower
+rates than reads and writes because they block requests on data-dependent addresses while waiting on
+PCIe round trips~\cite{design-guidelines,sherman}.  Figure~\ref{fig:rdma_concur} shows that the NICs
+in our testbed (100-Gbps NVIDIA Mellanox ConnectX-5s) are capable of serving many 10s of millions of
+RDMA operations per second (limited only by link speed), but CAS operations to remote server memory
+top out around 50 MOPS.  
 
 %the scalability of
 %these operations on CX5 NICs for 64 bit operations.
 %%
 
-While atomic operations are limited to 64 bits, read and write message
-sizes are bounded only by the link MTU.
-%can 
-%RDMA NIC bandwidth has increased disproportionately to
-%latency in the last decade leading to interesting design
-%tradeoffs. CX7 NICs have 10$\times$ the bandwidth of CX3's
-%but their intra-rack RTT has only shrunk by 1.5$\times$.
-Figure~\ref{fig:rdma-benchmarks-b} shows that on our testbed
-NIC-to-NIC round-trip times are similar for all message sizes
-less than about 128 bytes, and
-%on CX5s for variable sized writes. All writes up
-%to 128 bytes have comparable latencies and
-messages must exceed 1~KB before the latency of a single large
-operation exceeds two RTTs of smaller ones.  We leverage this
-observation in RCuckoo by collapsing multiple small reads into a
-single larger one when appropriate.  The optimal threshold trades off
-latency reduction against read amplificaiton.
+While atomic operations are limited to 64 bits, read and write message sizes are bounded only by the
+link MTU.
+%can RDMA NIC bandwidth has increased disproportionately to latency in the last decade leading to
+%interesting design tradeoffs. CX7 NICs have 10$\times$ the bandwidth of CX3's but their intra-rack
+%RTT has only shrunk by 1.5$\times$.
+Figure~\ref{fig:rdma-benchmarks-b} shows that on our testbed NIC-to-NIC round-trip times are similar
+for all message sizes less than about 128 bytes, and
+%on CX5s for variable sized writes. All writes up to 128 bytes have comparable latencies and
+messages must exceed 1~KB before the latency of a single large operation exceeds two RTTs of smaller
+ones.  We leverage this observation in Chapter~\ref{chap:rcuckoo} by collapsing multiple small reads
+into a single larger one when appropriate.  The optimal threshold trades off latency reduction
+against read amplificaiton.
 
 %\textbf{If there
 %is surplus bandwidth a single large message can have much
 %lower latency than two dependent smaller messages.}
 
-Finally, we highlight that our testbed NICs, like those from several
-vendors, include a small amount (256~KB in our case) of on-NIC memory
-that can be addressed by remote clients using RDMA
-operations~\cite{device-memory}.  Accesses to NIC memory avoid the
-need to cross the server's PCIe bus, decreasing latency and increasing
-throughput.  The performance gain is particularly significant for
-atomic operations.  Figure~\ref{fig:rdma-benchmarks-c} shows the
-maximum aggregate throughput of concurrent CAS operations targeting
-the same single (i.e., contended) address or distinct, independent
-addresses in both main server memory (shown in orange) and on-NIC
-device memory (blue).  CAS operations perform between 1.8--3.1$\times$
-faster on NIC memory.  
+Mellanox NICs include a small amount (256~KB in our case) of on-NIC memory that can be addressed by
+remote clients using RDMA operations~\cite{device-memory}.  Accesses to NIC memory avoid the need to
+cross the server's PCIe bus, decreasing latency and increasing throughput.  The performance gain is
+particularly significant for atomic operations.  Figure~\ref{fig:rdma-benchmarks-c} shows the
+maximum aggregate throughput of concurrent CAS operations targeting the same single (i.e.,
+contended) address or distinct, independent addresses in both main server memory (shown in orange)
+and on-NIC device memory (blue).  CAS operations perform between 1.8--3.1$\times$ faster on NIC
+memory.  
 %%
 Chapter~\ref{chap:rcuckoo} illustrates the profound effect that utilizing NIC memory can have on
 data structure performance in a disaggregated setting by using NIC memory specifically for high
 contention locking operations.
+
+\subsection{RDMA limitations}
+
+RDMA is a powerful technology however it has well documented drawbacks which can make system design
+difficult and limit performance. One topic of significant debate is the limitation of the RDMA API.
+Multiple operations are difficult with RDMA, for instance allocating memory requires calls into the
+control path, and data indirection like pointers requires a round trip back to the sender to
+resolve~\cite{prism}. As detailed in prior sections Atomic operations are slow and lead to
+performance bottlenecks~\cite{design-guidelines}.
+
+Of particular note is the difficulty in getting global ordering across QPs. As noted above even
+using fast NIC memory for RDMA operations yields only a few million operations per second (~10M).
+Using this technique to implement a global sequencer is orders of magnitude slower than a global
+squencer implemented with two-sided verbs and an efficient RPC system
+(~120M)~\cite{design-guidelines}. In the next section I overview the rise of programmable network
+devices and provide some background on how they can alleviate some of the limitations of RDMA.
 
 
 %many modern NICs
@@ -508,74 +520,6 @@ contention locking operations.
 %reducing contention~\cite{rdma-masked-cas}. While multi-CAS
 %is not supported these features have been demonstrated to
 %enable fast dense lock tables~\cite{sherman}.
-
-
-
-\section{One-Sided Verbs}
-%%
-\todo{Amy -This subsubsectio (1.2.1) covers a lot of different topics and it’s not clear which ones
-matter. Can you provide a bit more structure/ organization to help the reader understand the key
-points? }
-%%
-The RDMA specification provides five service types (Reliable Connection, Unreliable Connection,
-Reliable Datagram, Unreliable Datagram, RAW Datagram). Additionally RDMA provides \textit{Verbs};
-actions the NIC can take which vary by service type. Reliable services provide acknowledgements and
-connection services provide sequence numbers, in-order delivery, and retransmission. Reliable
-connections provide the strongest guarantees and allow for the use of \textit{one-sided} verbs which
-implement memory-like semantics. One-sided verbs entirely bypass the CPU of the remote machine and
-allow a client to directly read, write, and atomically modify the remote hosts memory. This ability
-makes RDMA a powerful tool for designing disaggregated systems, especially memory systems as it
-allows designers to build with the assumption that memory is passive, i.e. no remote CPU exists. 
-
-% This prototyping ability is quintessential for understanding how future disaggregated systems will
-% perform.
-
-The memory semantics of one-sided RDMA are complex. Not all verbs respect ordering even on the same
-connection. RDMA provides a variety of configurations to gain ordering both on and across
-connections. Queue pairs (QPs) are connection handles for RDMA. Verbs are issued on a QP and QP are
-polled for responses. QPs provide in-order delivery, but not necessarily in-order completion. For
-instance issuing a read prior to a write may see the results of the write. Across QPs no ordering is
-guaranteed by default. RDMA provides two atomic operations compare and swap (CAS) and fetch and add
-(FAA) for atomic modification of 64-bit regions of remote memory. The RDMA advanced transport
-supports masked versions of these operations to allow for high-density atomic regions while reducing
-contention~\cite{rdma-masked-cas}. These atomic operations are the critical component for building
-shared disaggregated systems. They enable the construction of locks and semaphores, as well as
-lock-free data structures.
-
-\section{CXL}
-
-RDMA is not the only proposal for disaggregated memory. The Compute Express Link (CXL) is a new
-interconnect and standard supported by chip manufacturers and hyperscalers~\cite{cxl}. CXL is built on PCIe and
-aims to expand CPU memory capacity by allowing for the attachment of remote memory devices. Despite
-only a few CXL devices being available at the time of writing the technology is promising. Initial
-work has shown that CXL latencies for remote memory devices are between 2-5x the latency of local
-memory demonstrating that CXL devices can provide lower latency and higher throughput than
-RDMA~\cite{cxl-demyst,tpp,pond}. Given these promising results we expect that CXL will be a strong
-contender for remote memory pools.
-
-CXL has limitations that are not present in RDMA, specifically surrounding how memory is shared. CXL
-provides cache coherent memory semantics, however the expected cost of coherence similar to NUMA
-coherence will be high. Second CLX does not currently support a routing layer which limits it to the
-scalability of a CXL switch (likely rack scale). Finally CXL does not, at the time of writing,
-support in-network programmability. As we will show in our work in Chapter~\ref{chap:swordbox}
-in-network programmability is a powerful tool for reducing contention in shared data structures, the
-lack of any programmable devices in network may limit the ability to effectively share CXL devices.
-
-\todo{Alex - non sequitur}
-Prior work on remote memory data structures indicated that allowing CPU cores to subscribe to
-\textit{notify} groups could reduce the price of coherence while enabling fast shared
-structures~\cite{aguilera2019designing}. While notifications are not natively supported by CXL, CXL
-devices could be designed to support them without the need to build CXL programmable network
-devices. 
-
-\todo{Alex - Move this elsewhere}
-Alternatively techniques for NUMA scalability may also apply to remote memory such as black box
-approaches for NUMA data structures~\cite{bbn,nros,ironsync}. These techniques are powerful and
-enable general data structures to be built on NUMA architectures with low latency. While powerful
-these systems require each NUMA domain to synchronize its log with a singular log master, it also
-requires efficient support for atomic operations like CAS. It's unclear at this point in time if
-these approaches will scale up to the expected number of NUMA domains in a disaggregated deployment
-due to the fact that their bandwidth requirements grow linearly with the number of domains.
 
 \section{Programable Networks}
 
@@ -592,113 +536,79 @@ consensus~\cite{eris, nopaxos}. In this dissertation we leverage the power of pr
 to exactly this benefit to get fast in-network serialization for RDMA based data structures (Section
 ~\ref{chap:swordbox}).
 
-~\todo{Alex - lots of downsides what are the upsides?} Programmable switches differ from other
-programmable network devices in that they have orders of magnitude more aggregate bandwidth, a
-switch specific architecture (often pipelined~\cite{tofino2}), and run on P4 code in most cases.
-%%
-Switches typically have an ingress and egress pipeline which is broken into multiple stages. In the
-case of Tofino 2 both ingress and egress have 12 stages. Packets pass through one or more stages and
-are set for transmission once each stage of the pipeline used by the program has executed. Per stage
-computation is limited, usually to a few instructions, such as fetching from a lookup table,
-processing a conditional, or modifying and storing packet header data. The result is that P4
-programs have a constrained programming model. Loops and recursion are not easily supported and
-branching is limited. Finally, switch memory is highly constrained per pipeline stage. All P4
-accessible memory is SRAM of which each switch only has a few megabytes.
-%%
-Ideal programs for programmable switches provide a high degree of benefit from a small amount of
-computation. As an example a network sequencer which gives a unique monotonic sequence number to
-each packet is well suited for a programmable switch as it requires only a small amount of
-storage space, and limited amount of computation per packet.
+Most prior proposals for disaggregation consider rack-scale deployments where
+%. They propose a single rack with
+servers are partitioned into roles: compute, memory, and storage, all of which are interconnected by
+a top-of-rack switch~\cite{disandapp,the-machine,intel-rack,firebox,legoos}.  The central role of
+the ToR in this architecture has not gone unnoticed, and researchers have observed that a
+programmable switch can off-load a wide variety of traditional operating system
+services~\cite{disandapp,mind,netlock,netkv,netchain,netcache}. The constraints in each case are
+similar: programmable switches have limited memory and processing capabilities.  If the
+computational task is too large packets must be recirculated adding additional latency and reducing
+aggregate bandwidth.  Ideal applications for programmable switches use little memory, require
+minimal processing and deliver outsized performance benefit.
+%from centralization.  , and the billions of operations (in terms of packets) that a switch can
+%process per second.  %
 
-\subsection{Programmable Switch Use (and Misuse) Cases}
-%%
-\todo{I have received a lot of push back on this section probably just cut it, I tried to put it in
-for alex but that was a bad idea.}
+Specifically, prior work has shown that programmable switches are able to provide rack-scale
+serialization at low cost~\cite{eris,no-paxos,when-computer,Grant2021InContRes}, manage
+locks~\cite{netlock}, and track the state required to maintain an RDMA reliable
+connection~\cite{tea}. Researchers have even used a programmable switch to implement a centralized
+memory controller including a unified TLB and cache for passive remote memory~\cite{mind}.  Their
+approach is limited, however, by the resource constraints of the switch.  Inspired by
+performance-enhancing TCP proxies of old~\cite{snoop,rfc3135}, we consider a slightly different
+design point where the authoritative state and control logic remain at the end points.  In
+Chapter~\ref{chap:swordbox} we show that a ToR can observe and, at times, selectively modify RDMA
+packets~\cite{switchml,Grant2021InContRes} in-flight to improve performance while preserving the
+semantics of the underlying RDMA connections.
 
-Memory constraints on programmable network devices, as well as their programming model and
-architecture have a large impact on what kinds of systems can and should be built upon
-them~\cite{when-computer}. Cache size and pipeline depth have a large impact on what can be
-effectively stored on a programable switch. As part of our exploration of {\sword}
-(Chapter~\ref{chap:swordbox}) we examined the use of a programmable switch as a cache for the
-replicated log, and found that the switch for a variety of subtle reasons was not a good fit for our
-cache despite many prior works on in-network caching and key-value
-stores~\cite{netcache,netchain,netkv,netlock}.
+In Chapter~\ref{chap:swordbox} We will show that a programmable switch can be used to great effect
+in accelerating a shared rdma based data structure by caching a small amount of data and modifying
+operations in flight to reduce (or entirely remove) contention. In the following section I will
+describe data structures in disaggregated systems and prior work on NUMA based data structures.
 
-In the log system all clients must read all log entries for consistency. This read patten leads to a
-bandwidth bottleneck on the server hosting the log as the number of clients increases and the size
-of the log entry increases.  Figure~\ref{fig:bandwidth-model} Illustrates how as the number of
-clients and the size of individual log entries increases performance falls over. In our initial
-design we debated how to deal with the bottleneck. On one hand we could replicate the log across
-multiple memory servers and alleviate the broadcast bottleneck by spreading it across replicas.
-Alternatively we could cache the most recent writes on a programmable switch.  Initially we thought
-that the switch would be an excellent place for the log cache because we could easily reason about
-the access pattern of the log, and each client's link bandwidth would be proportional to how much
-they read. But the devil is in the details. Due to RDMA and switch pipeline constraints as described
-in the following section we found that the switch was an untenable solution.
+%% Others have proposed
+%% leveraging this observation, along with programmable switches' ability
+%% to manage small amounts of state in network, to provide a number of
+%% in-network services~\cite{when-computer}; Mind, for instance, provides
+%% a unified TLB and cache for disaggregated applications~\cite{mind}.
 
-\begin{figure}
-\centering
-\includegraphics[width=0.99\linewidth]{fig/bandwidth-model.pdf}
-\caption{Bandwidth model for memory replication. 1MS is a single memory node, while 3MS is 3.}
-\label{fig:bandwidth-model}
-\end{figure}
+%% , and . These properties make a top-of-rack
+%% programmable switch ideal for managing remote memory as it can guard
+%% access, maintain connections, and provide serialization primitives for
+%% all clients.
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.99\textwidth]{fig/switch-cache-model.pdf}
-    \caption{Performance improvement of caching on a programable switch as a function of hit rate and object cache size}
-    \label{fig:switch-cache-model}
-\end{figure}
+%\todo{RDMA middlebox (find citations ~\cite{mind,switchml})}
 
-The values in Figure~\ref{fig:switch-cache-model} assume 64 clients and a single memory server and a
-log entry size of 8 bytes. The 0\% hit rate on cache sizes of 1024 is almost identical to the
-furthest left point in Figure~\ref{fig:bandwidth-model} with 64 clients and a single memory node.
-Note that with this cache size and a hit rate of 95\% which may be attainable considering the log
-access patterns are extremely predictable we are able to handle around 200 Million ops per second.
-
-Unfortunately current programmable switch hardware does not allow for cashable objects over 192
-bytes. Our Tofino 2 switch has a fixed sized 64 bit maximum storage capacity at each stage of it's
-pipeline, with a total of 24 stages counting both ingress and egress~\cite{tofino2}. Given a maximum
-cache size of 192 we can again calculate our maximum performance improvement. Using max sized RDMA
-reads of 192 bytes we significantly drop performance without the use of a switch, and in the common
-case get around 68 MOPS, our model without a switch striping across 3 memory servers yields a
-maximum of 57 MOPS. While still a theoretical advantage we consider the complexity of adding a
-programmable switch and caching for and 18\% benefits to be not worth it, especially considering
-that next generation NICs are slated for bandwidths of 800GBPS+. If future switch technology were to
-allow for larger object caches we believe this direction may be fruitful.
-
-\todo{Alex - put this insite somewhere in the intro}
-Given these kinds of subtle constraints the use of programmable network hardware must be carefully
-considered. In the case of {\sword} we explore the use of a programmable switch for caching parts of a
-shared data structure including locks, and parts of index structures. We found that some data
-structures, specifically those that require very little state in their index for a read or a write
-to succeed are well suited for caching. An example of this is appending to a linked list where only
-the last element of the list needs to be cached in order for an append to succeed. Alternatively
-inserting into an arbitrary location in a linked list is hard as all the nodes in the linked list
-need to be cached.
+% ~\todo{Alex - lots of downsides what are the upsides?} Programmable switches differ from other
+% programmable network devices in that they have orders of magnitude more aggregate bandwidth, a
+% switch specific architecture (often pipelined~\cite{tofino2}), and run on P4 code in most cases.
+% %%
+% Switches typically have an ingress and egress pipeline which is broken into multiple stages. In the
+% case of Tofino 2 both ingress and egress have 12 stages. Packets pass through one or more stages and
+% are set for transmission once each stage of the pipeline used by the program has executed. Per stage
+% computation is limited, usually to a few instructions, such as fetching from a lookup table,
+% processing a conditional, or modifying and storing packet header data. The result is that P4
+% programs have a constrained programming model. Loops and recursion are not easily supported and
+% branching is limited. Finally, switch memory is highly constrained per pipeline stage. All P4
+% accessible memory is SRAM of which each switch only has a few megabytes.
+% %%
+% Ideal programs for programmable switches provide a high degree of benefit from a small amount of
+% computation. As an example a network sequencer which gives a unique monotonic sequence number to
+% each packet is well suited for a programmable switch as it requires only a small amount of
+% storage space, and limited amount of computation per packet.
 
 \section{Disaggregated Systems and Data Structures}
-\sg{I've skipped the prior section because I'm not sure that I'll keep it}.
 
-\todo{Amy - I should be seperating systems into different categories here and talking about them in
-more detail, this is where sharing is important}
-
-The trends and technologies discussed in the above sections have led to a new class of system for
-disaggregation. These systems are built with the assumption that resources are separated by a fast
-network and have little to no heterogeneity. I.e a storage server will be mostly storage with
-minimal compute to boot and configure the machine and execute simple management
-tasks~\cite{aguilera2019designing,fast-networks,dis-and-app,legoos}.
-
-Disaggregated memory is the focus of many systems. A common model for disaggregated memory is the
-same as GMS with the exception that memory is passive and not part of a workstation pool~\cite{gms},
-that is remote memory can be used as a swap space or as a remote cache rather than disk. In this
-model applications are apportioned a partition of remote memory for it's
-pages~\cite{infiniswap,fastswap,leap,blade-server,legoos,hydra}, objects~\cite{aifm,carbink}, or
-cache lines~\cite{kona}. These systems focus on improving performance by reducing the number of
-remote memory accesses that an application has to make. In general this is done by identifying hot
-and cold memory then prefetching and evicting data to reduce the number of faults to remote memory.
-Additionally these systems focus on fault-tolerance by replicating or erasure coding memory across
-replicated memory servers~\cite{hydra}.
+The aforementioned trends and technologies have enabled disaggregated systems to become a reality.
+A common model for disaggregated memory is that the remote memory of another machine can be used as
+a swap space or as a remote cache rather than disk. In this model applications are apportioned a
+partition of remote memory for it's pages~\cite{infiniswap,fastswap,leap,blade-server,legoos,hydra},
+objects~\cite{aifm,carbink}, or cache lines~\cite{kona}. These systems focus on improving
+performance by reducing the number of remote memory accesses that an application has to make. In
+general this is done by identifying hot and cold memory then prefetching and evicting data to reduce
+the number of faults to remote memory.  Additionally these systems focus on fault-tolerance by
+replicating or erasure coding memory across replicated memory servers~\cite{hydra}.
 
 A commonality between each of these memory systems is the lack of sharing. Operations common to
 non-disaggregated systems like mmapping a shared page are not supported by these systems. In cases
@@ -721,73 +631,7 @@ disaggregated rack to aid in serialization. Notably MIND~\cite{mind} implements 
 a switch, while Clio~\cite{clio} and SuperNIC~\cite{supernic} use an FPGA based smartNIC to
 implement any number of memory side network functions.
 
-
-\section{Swordbox Background}
-
-We briefly overview RDMA, use of
-programmable switches in disaggregated settings, and passive remote
-memory.
-
-
-
-
-\subsection{Programmable switches}
-
-
-
-Most prior proposals for
-disaggregation consider rack-scale deployments where
-%. They propose a single rack
-%with
-servers are partitioned into roles: compute, memory, and storage, all
-of which are interconnected by a top-of-rack
-switch~\cite{disandapp,the-machine,intel-rack,firebox,legoos}.  The central
-role of the ToR in this architecture has not gone unnoticed, and
-researchers have observed that a programmable switch can off-load a
-wide variety of traditional operating system
-services~\cite{disandapp,mind,netlock,netkv,netchain,netcache}. The
-constraints in each case are similar: programmable switches have
-limited memory and processing capabilities.  If the computational task
-is too large packets must be recirculated adding
-additional latency and reducing aggregate bandwidth.  Ideal
-applications for programmable switches use little memory, require
-minimal processing and deliver outsized performance benefit.
-%from centralization.
-%, and the billions of operations (in terms of packets)
-%that a switch can process per second.
-%%
-
-Specifically, prior work has shown that programmable switches are able
-to provide rack-scale serialization at low
-cost~\cite{eris,no,when-computer,Grant2021InContRes}, manage
-locks~\cite{netlock}, and track the state required to maintain an
-RDMA reliable connection~\cite{tea}.  Most relatedly, researchers have
-even used a programmable switch to implement a centralized memory
-controller including a unified TLB and cache for passive remote
-memory~\cite{mind}.  Their approach is limited, however, by the
-resource constraints of the switch.  Inspired by performance-enhancing
-TCP proxies of old~\cite{snoop,rfc3135}, we consider a slightly
-different design point where the authoritative state and control logic
-remain at the end points.  In our approach, the ToR simply observes
-and, at times, selectively modifies RDMA
-packets~\cite{switchml,Grant2021InContRes} in-flight to improve
-performance while preserving the semantics of the underlying RDMA
-connections.
-
-%% Others have proposed
-%% leveraging this observation, along with programmable switches' ability
-%% to manage small amounts of state in network, to provide a number of
-%% in-network services~\cite{when-computer}; Mind, for instance, provides
-%% a unified TLB and cache for disaggregated applications~\cite{mind}.
-
-%% , and . These properties make a top-of-rack
-%% programmable switch ideal for managing remote memory as it can guard
-%% access, maintain connections, and provide serialization primitives for
-%% all clients.
-
-%\todo{RDMA middlebox (find citations ~\cite{mind,switchml})}
-
-\subsection{Disaggregated memory}
+\subsection{Swordbox Disaggregated memory}
 
 While 1-sided RDMA allows system designers to place memory on passive
 remote servers, the question of how best to access remote memory
@@ -887,6 +731,8 @@ decreases the likelihood of stale accesses.
 %to stale tail locations.
 %Clover serializes writes with RDMA compare and swap
 %requests which further impact performance.
+
+
 
 
 
@@ -1442,3 +1288,109 @@ techniques and enable a shift towards mainstream disaggregated computing.
 \backmatter
 
 \end{document}
+
+
+%%% Catch place for programmable switch use cases -- do not use
+% \subsection{Programmable Switch Use (and Misuse) Cases}
+% %%
+% \todo{I have received a lot of push back on this section probably just cut it, I tried to put it in
+% for alex but that was a bad idea.}
+
+% Memory constraints on programmable network devices, as well as their programming model and
+% architecture have a large impact on what kinds of systems can and should be built upon
+% them~\cite{when-computer}. Cache size and pipeline depth have a large impact on what can be
+% effectively stored on a programable switch. As part of our exploration of {\sword}
+% (Chapter~\ref{chap:swordbox}) we examined the use of a programmable switch as a cache for the
+% replicated log, and found that the switch for a variety of subtle reasons was not a good fit for our
+% cache despite many prior works on in-network caching and key-value
+% stores~\cite{netcache,netchain,netkv,netlock}.
+
+% In the log system all clients must read all log entries for consistency. This read patten leads to a
+% bandwidth bottleneck on the server hosting the log as the number of clients increases and the size
+% of the log entry increases.  Figure~\ref{fig:bandwidth-model} Illustrates how as the number of
+% clients and the size of individual log entries increases performance falls over. In our initial
+% design we debated how to deal with the bottleneck. On one hand we could replicate the log across
+% multiple memory servers and alleviate the broadcast bottleneck by spreading it across replicas.
+% Alternatively we could cache the most recent writes on a programmable switch.  Initially we thought
+% that the switch would be an excellent place for the log cache because we could easily reason about
+% the access pattern of the log, and each client's link bandwidth would be proportional to how much
+% they read. But the devil is in the details. Due to RDMA and switch pipeline constraints as described
+% in the following section we found that the switch was an untenable solution.
+
+% \begin{figure}
+% \centering
+% \includegraphics[width=0.99\linewidth]{fig/bandwidth-model.pdf}
+% \caption{Bandwidth model for memory replication. 1MS is a single memory node, while 3MS is 3.}
+% \label{fig:bandwidth-model}
+% \end{figure}
+
+% \begin{figure}
+%     \centering
+%     \includegraphics[width=0.99\textwidth]{fig/switch-cache-model.pdf}
+%     \caption{Performance improvement of caching on a programable switch as a function of hit rate and object cache size}
+%     \label{fig:switch-cache-model}
+% \end{figure}
+
+% The values in Figure~\ref{fig:switch-cache-model} assume 64 clients and a single memory server and a
+% log entry size of 8 bytes. The 0\% hit rate on cache sizes of 1024 is almost identical to the
+% furthest left point in Figure~\ref{fig:bandwidth-model} with 64 clients and a single memory node.
+% Note that with this cache size and a hit rate of 95\% which may be attainable considering the log
+% access patterns are extremely predictable we are able to handle around 200 Million ops per second.
+
+% Unfortunately current programmable switch hardware does not allow for cashable objects over 192
+% bytes. Our Tofino 2 switch has a fixed sized 64 bit maximum storage capacity at each stage of it's
+% pipeline, with a total of 24 stages counting both ingress and egress~\cite{tofino2}. Given a maximum
+% cache size of 192 we can again calculate our maximum performance improvement. Using max sized RDMA
+% reads of 192 bytes we significantly drop performance without the use of a switch, and in the common
+% case get around 68 MOPS, our model without a switch striping across 3 memory servers yields a
+% maximum of 57 MOPS. While still a theoretical advantage we consider the complexity of adding a
+% programmable switch and caching for and 18\% benefits to be not worth it, especially considering
+% that next generation NICs are slated for bandwidths of 800GBPS+. If future switch technology were to
+% allow for larger object caches we believe this direction may be fruitful.
+
+% \todo{Alex - put this insite somewhere in the intro}
+% Given these kinds of subtle constraints the use of programmable network hardware must be carefully
+% considered. In the case of {\sword} we explore the use of a programmable switch for caching parts of a
+% shared data structure including locks, and parts of index structures. We found that some data
+% structures, specifically those that require very little state in their index for a read or a write
+% to succeed are well suited for caching. An example of this is appending to a linked list where only
+% the last element of the list needs to be cached in order for an append to succeed. Alternatively
+% inserting into an arbitrary location in a linked list is hard as all the nodes in the linked list
+% need to be cached.
+
+
+
+% \section{CXL}
+
+% RDMA is not the only proposal for disaggregated memory. The Compute Express Link (CXL) is a new
+% interconnect and standard supported by chip manufacturers and hyperscalers~\cite{cxl}. CXL is built on PCIe and
+% aims to expand CPU memory capacity by allowing for the attachment of remote memory devices. Despite
+% only a few CXL devices being available at the time of writing the technology is promising. Initial
+% work has shown that CXL latencies for remote memory devices are between 2-5x the latency of local
+% memory demonstrating that CXL devices can provide lower latency and higher throughput than
+% RDMA~\cite{cxl-demyst,tpp,pond}. Given these promising results we expect that CXL will be a strong
+% contender for remote memory pools.
+
+% CXL has limitations that are not present in RDMA, specifically surrounding how memory is shared. CXL
+% provides cache coherent memory semantics, however the expected cost of coherence similar to NUMA
+% coherence will be high. Second CLX does not currently support a routing layer which limits it to the
+% scalability of a CXL switch (likely rack scale). Finally CXL does not, at the time of writing,
+% support in-network programmability. As we will show in our work in Chapter~\ref{chap:swordbox}
+% in-network programmability is a powerful tool for reducing contention in shared data structures, the
+% lack of any programmable devices in network may limit the ability to effectively share CXL devices.
+
+% \todo{Alex - non sequitur}
+% Prior work on remote memory data structures indicated that allowing CPU cores to subscribe to
+% \textit{notify} groups could reduce the price of coherence while enabling fast shared
+% structures~\cite{aguilera2019designing}. While notifications are not natively supported by CXL, CXL
+% devices could be designed to support them without the need to build CXL programmable network
+% devices. 
+
+% \todo{Alex - Move this elsewhere}
+% Alternatively techniques for NUMA scalability may also apply to remote memory such as black box
+% approaches for NUMA data structures~\cite{bbn,nros,ironsync}. These techniques are powerful and
+% enable general data structures to be built on NUMA architectures with low latency. While powerful
+% these systems require each NUMA domain to synchronize its log with a singular log master, it also
+% requires efficient support for atomic operations like CAS. It's unclear at this point in time if
+% these approaches will scale up to the expected number of NUMA domains in a disaggregated deployment
+% due to the fact that their bandwidth requirements grow linearly with the number of domains.
