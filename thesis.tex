@@ -630,7 +630,7 @@ properties in terms of ~\todo{come back and point to sections.}.
 
 
 \subsection{Sparse vs Dense Data Structures}
-
+\label{sec:sparse-dense}
 Data structures in disaggregated systems can be broadly categorized as either sparse or dense.
 Sparse data structures are pointer based, such as linked lists and trees. Dense data structures
 reside in a linear block of memory, such as an array or heap. These two categories form a spectrum
@@ -898,50 +898,21 @@ shared memory system as a benchmark for future systems to compare to.
 \chapter{Disaggregated Cuckoo Hashing}
 \label{chap:rcuckoo}
 
-While {\sword} provides an \todo{Alex: Upper bound is a claim} upper bound on the performance of a
-shared remote memory system, it is not a general purpose solution. While \sword is able to provide
-faster locking and faster optimistic concurrency it does not handle all data structure and more
-importantly, requires the addition of a programable switch to the network. The need for programmable
-hardware is a significant barrier to entry for many data center operators, and while we believe that
-for the most performance stringent applications the cost is worth it, we also believe that
-alternative solutions may be better for average operators given their current deployments. 
-%%
+While {\sword} provides a significant performance boost for shared remote memory systems, it is not
+a general purpose solution. While \sword is able to provide faster locking and faster optimistic
+concurrency it does not handle all data structure and more importantly, requires the addition of a
+programable switch to the network. The need for programmable hardware is a significant barrier to
+entry for many data center operators, and while we believe that for the most performance stringent
+applications the cost is worth it, we also believe that alternative solutions may be better for
+average operators given their current deployments. 
 
-\todo{Alex: A bit too meta}
-Part of
-our exploration during \sword was to investigate data structures which would be a good fit for
-middlebox interposition, during this research we also explored data structures and techniques which
-were amenable to disaggregation in general.
-
-
-
-\todo{move to the background chapter}
-A number of threads stood out to us during our review. Perhaps the most important is that data
-locality can dramatically improve performance~\cite{farm}. One of the biggest performance killers
-are the additional round trips required to resolve indirect pointers. A common design pattern in
-key-value stores is to have a index with a pointer to the data, and potentially long chains where
-collisions occur~\cite{race, clover}. Each time a pointer resolution is required the client must
-incur an additional round trip. In NUMA literature (and even for spinning disks) locality was
-identified as an important factor for performance~\cite{bbn,hopscotch}. Techniques like hop-scotch
-hashing ensure that data is close to its hash location in physical memory. This is advantageous for
-RDMA systems as a single big read can guess at the location of the data and be ensured to grab it
-only incurring an additional bandwidth penalty.
-
-The second trend we identified is that pushing computation to the client can save a significant
-amount of time in place of locality. Page tables are difficult to port to remote memory as each
-level of indirection requires a round trip. Clio introduced the idea of a flat page table~\cite{clio}. Their
-insight is that when creating a virtual address space the virtual address itself is not critical.
-Rather than handle multiple levels of page tables they push the complexity to the allocation
-function. When allocating in Clio the allocator uses a flat hash based page table with a single look
-up. The table avoids collisions by iteratively generating virtual addresses until one is produced
-which does not cause a hash table collision. This \textit{pre-computation} technique is powerful as
-it allows for a single round trip for getting remote memory allocations.
-
-Table~\ref{tab:re-table} ~\todo{Amy - Be more specific} lists multiple other techniques which cross
-cut the literature. We believed that techniques such as precomputation and locality could be used to
-improve the performance of existing data structures. We designed our next system RCuckoo with the
-intuition that cuckoo hashing, which had already been studied in the context of RDMA key-value
-stores, could be improved and made highly efficient by applying these techniques.
+As described in Section~\ref{sec:sparse-dense} there are a variety of data structure specific
+optimizations which have been leveraged to improve the performance of disaggregated data structures.
+Our position in this work is that locality based optimizations are under utilized due to the high
+cost of round trips to remote memory, and the fact that network capacity continues to grow at an
+astonishing rate. In this Chapter we make the case for locality optimized cuckoo hashing and show
+how it can be used to improve performance, reduce contention, and make use of the latest trends in
+network hardware.
 
 
 \input{rcuckoo/intro}
