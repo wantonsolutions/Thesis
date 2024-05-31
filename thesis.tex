@@ -294,6 +294,38 @@ latencies in some cases)(Chapter~\ref{chap:swordbox}). Further complicating the 
 data structures is that memory, once in a single fault domain, can fail ripping a hole directly into
 a processes address space~\cite{amanda-hotnets,hydra,legoos}.
 
+At it's core the challenge of sharing in disaggregated memory is serialization. When a data
+structure is shared by multiple accessors some mechanism must be in place to ensure the consistency
+of the data structure. In a monolithic system this is often done with locks, or atomic operations,
+and across machines it's done by either a centralized sequencer or a distributed protocol. As a
+point of comparison consider the differences between serialization an a traditional RPC vs
+disaggregated memory. In an RPC system request arrive on a NIC and are delivered to one or more CPU
+cores for processing~\cite{cuckoo-improvements,pilaf,herd,memc3,memcached}. If all requests are
+routed through a single CPU core than it implicitly serializes operations by enqueueing the RPC
+requests and servicing one at a time. If the RPC service has multiple cores any shared structure can
+be protected via a lock or other synchronization mechanism in the RPC servers local memory. In
+contrast in a disaggregated system no such server side CPU exists. Or if one does, its assumed to be
+low power and not capable of handling significant traffic. In the absence of such a CPU clients must
+enforce serialization amongst themselves.
+
+In the absence of serialization mechanism close to memory clients must rely on the only mechanism
+available in commodity systems RDMA atomics. RDMA atomics, as will be demonstrated throughout this
+dissertation, are the backbone of all shared disaggregated data structures. They take the form of
+two operations compare-and-swap (CAS), and fetch-and-add (FAA), which execute with the same
+semantics as their local counter parts, but on the memory of a remote machine. While their semantics
+remain the same their performance is dramatically different, as noted before, the cost of executing
+a remote operation is 20x that of local memory. This latency inflates the size of critical sections
+built with remote locks, and leads to stale caches and poor performance for optimistic data
+structures when under contention~\cite{clover,sherman,fusee,race,rolex}. \\
+
+
+\begin{center}
+\textit{Data structures can be optimized for disaggregated memory by leveraging network programmability} \\
+\end{center}
+
+
+
+
 This dissertation explores the design of shared data structures in disaggregated memory systems.  I
 present two systems ({\sword} and RCuckoo) which focus on the challenges of sharing and contending
 access to remote memory. {\sword} (Chapter~\ref{chap:swordbox}) is a middlebox approach for removing
