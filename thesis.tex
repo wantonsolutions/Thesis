@@ -237,9 +237,9 @@ existing state of the art.
 
 \textit{What should a data center server look like?} Twenty years ago, a data center operator may
 have argued for the simplicity of homogeneity over optimal performance, reasoning that carefully
-picked hardware at a given price point would yield the best cost-performance tradeoffs and that the
+picked commodity hardware at a given price point would yield the best cost-performance tradeoffs and that the
 performance gains of next-generation hardware would quickly erase any benefits made by specializing
-servers~\todo{cite}.
+servers due to frequency scaling~\cite{moore}.
 
 Since then, both Moore's law and Dennard scaling have slowed down dramatically. CPU clock speeds and
 memory density improvements have stagnated, leaving operators to fight tooth and claw to enjoy the
@@ -371,7 +371,7 @@ clients~\cite{clio, supernic}.
 %%
 \textit{What data structures should be used?} Few data structures are currently designed for remote
 memory~\cite{clover,fusee,race,sherman,rolex,ditto}. While these systems resemble
-RDMA~\cite{pilaf,herd,cell} and NUMA~\cite{flat,hopscotch,bbn} systems of the past, disaggregation
+RDMA~\cite{pilaf,herd,cell} and NUMA~\cite{flat-combining,hopscotch,bbn} systems of the past, disaggregation
 requires special consideration for the network hardware it runs on. How can round trips and access
 latencies be reduced? What data structures are easy to build, and which are hard? These questions
 are a key focus of this dissertation.
@@ -392,90 +392,101 @@ pairs and outperforms other systems on read-mostly workloads.
 
 \chapter{Background}
 
-Calls for distributed memory systems have been made for decades~\todo{Define distributed memory
-systems earlier}, and the groundwork of disaggregation relies heavily on past
-work~\cite{treadmarks,gms}. However, disaggregation differs from prior distributed systems due to
-its scale and system assumptions. Disaggregation assumes that each resource is standalone or paired
-with a minimal amount of other resources. For instance, a storage server may have a small amount of
-compute, such as an ARM core or two, in order to boot, configure, and occasionally execute
-management tasks. Similarly, compute servers (CPU, GPU) are outfitted with a small amount of memory
-(e.g., 4GB~\cite{legoos}) for caching. This assumption transforms the technologies and requirements
-for disaggregated systems.
 
-\todo{add forward pointers to the rest of the background and expand this section and explain the
-purpose of this chapter.}
-% Critically Remote Direct Memory Access (RDMA) (or a similar CPU bypass technology) is essential in
-% constructing a passive storage system.\todo{foreshadow 1.3 and 1.4 to hel}
+Disaggregated systems rely on a variety of state-of-the-art technologies. We begin this section by
+describing disaggregation generally and technologies that enable it (Section~\ref{sec }). The
+disaggregated networks described in this dissertation are fast (100Gbps+) and rely heavily on
+one-sided RDMA operations. In Section~\ref{sec:rdma}, we describe RDMA, the connections which enable
+one-sided operations, their consistency guarantees, and the atomic operations which serialize
+operations across connections. In-network computation enables new serialization points for shared
+data structures -- Section~\ref{sec:programmable-networks} describes the current landscape of
+programmable hardware, its strengths and limitations.
+Section~\ref{sec:disaggregated-data-structures} introduces the concepts behind and challenges of
+building shared data structures in disaggregated memory and how traditional structures can be
+adapted to remote memory.
+
 
 \section{Disaggregation}
+\label{sec:disaggregation}
 
-As with many paradigm shifts within the systems community, the idea of disaggregation is born from
-shifting hardware trends. Per-core access to memory has been decreasing for decades. CPU core counts
-have consistently increased for over a decade, while memory speeds and capacity have improved
-comparatively slowly~\cite{micron-memorywall}. The result is that CPU cores have less access to
-memory bandwidth and capacity now than 10 years ago. Memory is an increasingly scarce resource, and
-data center operators are exploring new ways to achieve better memory utilization. Disaggregation is
-one such option. Monolithic servers have a fixed amount of RAM per machine which, at a data center
-level, leads to a skewed distribution of memory utilization. Some servers are starving for memory
-while others have gigabytes to spare. This spare (stranded) memory is one target of disaggregation;
-it aims to give each server access to a shared pool of RAM. In general, a disaggregated resource, be
-it memory, FPGAs, or the network itself, can be provisioned for the peak-of-sums, rather than
-monolithic resources which are provisioned for the sum-of-peaks~\cite{clio,supernic,dsnf}.
+Disaggregation stems from shifting hardware trends, marking a paradigm shift within the systems
+community. Over decades, per-core access to memory has steadily declined. While CPU core counts have
+seen consistent increases, memory speeds and capacities have improved at a slower
+rate~\cite{micron-memorywall}. Consequently, CPU cores now have diminished access to memory
+bandwidth and capacity compared to a decade ago. With memory becoming an increasingly scarce
+resource, data center operators are exploring novel approaches to enhance memory utilization.
+Disaggregation emerges as one such option.  Monolithic servers typically allocate a fixed amount of
+RAM per machine, resulting in an uneven distribution of memory utilization across the data center.
+Some servers suffer from memory shortages, while others have surplus gigabytes. Disaggregation
+targets this spare, stranded memory, aiming to provide each server access to a shared pool of RAM.
+In essence, disaggregated resources, whether memory, FPGAs, or the network itself, can be
+provisioned for the peak-of-sums rather than the sum-of-peaks~\cite{clio,supernic,dsnf}.
 
-The biggest barrier to disaggregation is network latency~\cite{requirements}, and more aptly the
-difficulty of disaggregating a resource is proportional to its access latency with respect to the
-additional latency of the network. Disaggregated storage is a foregone conclusion. Academia and
-industry have pooled SSDs and HDDs into shared storage pools for their increased capacity and lower
-cost. This is relatively easy in comparison to memory as the access cost of storage is already high
-relative to the network. In concrete terms, intra-rack RDMA ping latencies are on the order of 1-2
-us. HDD latencies are 10-20 ms and SSDs are often 100's of us. In these cases, the network overhead
-is a single-digit percentage or less~\cite{decible}. In contrast, DRAM latencies are 50-100 ns. DRAM
-over RDMA has a nearly 20x overhead compared to local access. Despite this overhead, RDMA is one of
-the strongest contenders for a disaggregated transport. CXL is a burgeoning technology which
-promises NUMA-like latencies (200-300 ns) for remote memory access~\cite{cxl}. At the time of
-writing, CXL is not widely available and its performance and scalability are not well
-understood~\cite{direct-cxl,pond,cxl-demyst}. Regardless of interconnect, the principle of access
-latency remains the same. This dissertation focuses on RDMA although we see the algorithms and data
-structures presented here to be largely interconnect independent.
+
+The primary challenge in disaggregation is network latency~\cite{requirements}. The difficulty of
+disaggregating a resource is directly related to its access latency relative to the network latency.
+Disaggregated storage has become commonplace, with academia and industry pooling SSDs and HDDs into
+shared storage pools for increased capacity and cost efficiency. This process is comparatively
+straightforward compared to memory disaggregation, given the higher access costs of storage relative
+to the network.
+%%
+For instance, intra-rack RDMA ping latencies typically range from 1-2 microseconds, whereas HDD
+latencies are 10-20 milliseconds and SSDs are often hundreds of microseconds. In these scenarios,
+the network overhead is usually a single-digit percentage or less~\cite{decible}. In contrast, DRAM
+latencies are in the range of 50-100 nanoseconds. DRAM over RDMA incurs nearly a 20x overhead
+compared to local access. Despite this overhead, RDMA remains a prominent candidate for
+disaggregated transport.
+%%
+CXL, an emerging technology, promises NUMA-like latencies (200-300 nanoseconds) for remote memory
+access~\cite{cxl}. However, CXL's availability and performance scalability are not well-established
+at present~\cite{direct-cxl,pond,cxl-demyst}. Regardless of the interconnect used, the fundamental
+challenge of access latency persists. This dissertation primarily focuses on RDMA, although the
+algorithms and data structures presented herein are largely agnostic to interconnect specifics.
 
 
 
 \section{RDMA}
+\label{sec:rdma}
 
-Remote Direct Memory Access (RDMA) is the key enabling technology for disaggregation. This section
-describes RDMA's characteristics in terms of how it facilitates disaggregated architectures through
-its one-sided verbs, as well as the complexities of constructing shared data structures on top of
-RDMA, particularly with regard to serialization.
+Remote Direct Memory Access (RDMA) serves as the fundamental technology enabling disaggregation.
+This section delineates RDMA's attributes in facilitating disaggregated architectures via its
+one-sided verbs, alongside the intricacies of constructing shared data structures atop RDMA,
+particularly concerning serialization.
 
-RDMA is a low-latency, high-bandwidth network protocol. It achieves high performance by bypassing
-multiple overheads common to a traditional networking stack (e.g., Linux Sockets). Firstly, RDMA is
-a kernel-bypass technology, allowing user-space applications to directly interact with the network
-interface card (NIC), taking advantage of NIC-specific features like on-NIC caches~\cite{sherman}
-and avoiding context switch overheads. Secondly, RDMA's most distinguishing feature is that it
-offloads much of the network stack to the NIC hardware and bypasses the CPU entirely for data
-transfer. CPU bypass on the receiver side is what makes RDMA the key enabling technology for
-disaggregation. A receiver can expose its resources like memory without requiring a CPU to manage
-the transfer.
+RDMA stands as a low-latency, high-bandwidth network protocol. It achieves superior performance by
+circumventing multiple overheads inherent in traditional networking stacks, such as Linux Sockets.
+Firstly, RDMA operates as a kernel-bypass technology, empowering user-space applications to directly
+engage with the network interface card (NIC), leveraging NIC-specific features like on-NIC
+caches~\cite{sherman}, and sidestepping context switch overheads. Secondly, RDMA's foremost feature
+lies in offloading a significant portion of the network stack to NIC hardware, effectively bypassing
+the CPU entirely for data transfer. CPU bypass on the receiver end distinguishes RDMA as the pivotal
+technology for disaggregation. A receiver can expose its resources like memory without necessitating
+CPU intervention in managing the transfer.
 
-The following example illustrates the difference between sending and receiving with a traditional
-Unix API vs the sequence of operations with RDMA. In a traditional networking stack, if a process
-sends a UDP message on an existing socket, the user first marshals the data and then submits it to
-the kernel via a \textit{send}. The kernel then copies the data out of user-space, sets up the
-packet header, and submits the packet to the NIC.
-%%
-In contrast with RDMA, the user-space application registers a region of memory with the NIC prior to
-sending data. If an application wants to transfer the data in that region to a remote machine, it
-passes a pointer to the data and the data's size to the NIC, along with the remote machine's address
-and the action the NIC should take (verbs). The application sends by calling a special \textit{rdma
-send}. This operation is non-blocking and sends a signal to the NIC, which then DMAs the memory out
-of the process's address space, constructs a packet on the NIC (including managing transport state),
-and sends directly to another machine. The receiving NIC (in the case of a write) issues the DMA to
-the remote machine's memory without ever interacting with its CPU.
-%%
-The example above is only a high-level illustration of CPU bypass for RDMA write. The RDMA protocol
-is deeply complex with a variety of different connection types and verbs. The current InfiniBand
-RDMA specification is over 1,700 pages~\cite{infiniband-spec}. In this section, I briefly cover the
-most important aspects of RDMA for the purposes of this dissertation.
+To illustrate the contrast between traditional Unix API-based communication and RDMA, consider the
+following scenario: In a conventional networking stack, when a process sends a UDP message on an
+existing socket, the user initially marshals the data and submits it to the kernel through a
+\textit{send} operation. Subsequently, the kernel copies the data from user-space, configures the
+packet header, and dispatches the packet to the NIC. Conversely, with RDMA, the user-space
+application pre-registers a memory region with the NIC before sending data. When an application
+intends to transmit data from this region to a remote machine, it furnishes a pointer to the data,
+the data's size, the remote machine's address, and the NIC's intended action (verbs). The
+application initiates transmission by invoking a dedicated \textit{rdma send} operation. This
+operation, non-blocking in nature, signals the NIC to perform a direct memory access (DMA)
+operation, extracting the memory from the process's address space, assembling a packet on the NIC
+(inclusive of managing transport state), and transmitting directly to another machine. In the case
+of a write, the receiving NIC issues DMA to the remote machine's memory without engaging its CPU.
+
+While the aforementioned example provides a high-level portrayal of CPU bypass for RDMA writes, it's
+imperative to recognize that the RDMA protocol is inherently complex, featuring various connection
+types and verbs. The extant InfiniBand RDMA specification spans over 1,700
+pages~\cite{infiniband-spec}. Within this section, I briefly highlight the salient aspects of RDMA
+pertinent to this dissertation's objectives.
+
+
+
+
+
 
 
 
@@ -597,7 +608,7 @@ devices and provide some background on how they can alleviate some of the limita
 %enable fast dense lock tables~\cite{sherman}.
 
 \section{Programable Networks}
-
+\label{sec:programmable-networks}
 The past decade has seen the rise of programmable network devices. These devices are capable of
 executing users' code often at line rate. A huge variety of devices exist:
 SmartNICs~\cite{fairnic,e3,ipipe,floem}, DPUs~\cite{dsnf},
@@ -674,7 +685,7 @@ describe data structures in disaggregated systems and prior work on NUMA based d
 % storage space, and limited amount of computation per packet.
 
 \section{Disaggregated Systems and Data Structures}
-
+\label{sec:disaggregated-data-structures}
 The aforementioned trends and technologies have enabled disaggregated systems to become a reality.
 A common model for disaggregated memory is that the remote memory of another machine can be used as
 a swap space or as a remote cache rather than disk. In this model applications are apportioned a
