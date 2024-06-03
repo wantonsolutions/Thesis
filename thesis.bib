@@ -1904,3 +1904,59 @@ pages = {13-24},
 isbn = {978-1-4799-4394-4},
 note = {Selected as an IEEE Micro TopPick},
 }
+
+@misc{dpdk,
+   title={Data Plane Development Kit ({DPDK})},
+   author={Linux Foundation},
+   year={2015},
+   url = {http://www.dpdk.org}
+}
+
+@misc{bluefield,
+   title={NVIDIA BlueField-2 DPU},
+   author={NVIDIA},
+   year={2020},
+   url = {https://www.nvidia.com/en-us/networking/products/bluefield-2/}
+}
+
+@misc{pensando,
+   title={Pensando Infrastructure Accelerators}
+   author={Pensando},
+   year={2020},
+   url = {https://www.amd.com/en/accelerators/pensando}
+}
+
+@inproceedings{mira,
+author = {Guo, Zhiyuan and He, Zijian and Zhang, Yiying},
+title = {Mira: A Program-Behavior-Guided Far Memory System},
+year = {2023},
+isbn = {9798400702297},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3600006.3613157},
+doi = {10.1145/3600006.3613157},
+abstract = {Far memory, where memory accesses are non-local, has become more popular in recent years as a solution to expand memory size and avoid memory stranding. Prior far memory systems have taken two approaches: transparently swap memory pages between local and far memory, and utilizing new programming models to explicitly move fine-grained data between local and far memory. The former requires no program changes but comes with performance penalty. The latter has potentially better performance but requires significant program changes.We propose a new far-memory approach by automatically inferring program behavior and efficiently utilizing it to improve application performance. With this idea, we build Mira. Mira utilizes program analysis results, profiled execution information, and system environments together to guide code compilation and system configurations for far memory. Our evaluation shows that Mira outperforms prior swap-based and programming-model-based systems by up to 18 times.},
+booktitle = {Proceedings of the 29th Symposium on Operating Systems Principles},
+pages = {692–708},
+numpages = {17},
+location = {<conf-loc>, <city>Koblenz</city>, <country>Germany</country>, </conf-loc>},
+series = {SOSP '23}
+}
+
+@inproceedings{trackfm,
+author = {Tauro, Brian R. and Suchy, Brian and Campanoni, Simone and Dinda, Peter and Hale, Kyle C.},
+title = {TrackFM: Far-out Compiler Support for a Far Memory World},
+year = {2024},
+isbn = {9798400703720},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3617232.3624856},
+doi = {10.1145/3617232.3624856},
+abstract = {Large memory workloads with favorable locality of reference can benefit by extending the memory hierarchy across machines. Systems that enable such far memory configurations can improve application performance and overall memory utilization in a cluster. There are two current alternatives for software-based far memory: kernel-based and library-based. Kernel-based approaches sacrifice performance to achieve programmer transparency, while library-based approaches sacrifice programmer transparency to achieve performance. We argue for a novel third approach, the compiler-based approach, which sacrifices neither performance nor programmer transparency. Modern compiler analysis and transformation techniques, combined with a suitable tightly-coupled runtime system, enable this approach. We describe the design, implementation, and evaluation of TrackFM, a new compiler-based far memory system. Through extensive benchmarking, we demonstrate that TrackFM outperforms kernel-based approaches by up to 2\texttimes{} while retaining their programmer transparency, and that TrackFM can perform similarly to a state-of-the-art library-based system (within 10\%). The application is merely recompiled to reap these benefits.},
+booktitle = {Proceedings of the 29th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 1},
+pages = {401–419},
+numpages = {19},
+keywords = {disaggregated memory, compilers, far memory},
+location = {<conf-loc>, <city>La Jolla</city>, <state>CA</state>, <country>USA</country>, </conf-loc>},
+series = {ASPLOS '24}
+}
