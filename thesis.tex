@@ -589,6 +589,8 @@ on how they can alleviate some of the limitations of RDMA.
 
 \section{Programable Networks}
 \label{sec:programmable-networks}
+
+
 The past decade has seen the rise of programmable network devices. These devices are capable of
 executing users' code often at line rate. A huge variety of devices exist:
 SmartNICs~\cite{fairnic,e3,ipipe,floem}, DPUs~\cite{dsnf},
@@ -597,72 +599,41 @@ switches~\cite{p4,netchain,netcache,netlock} from a wide variety of vendors. Oft
 provide thin operating systems which allow users to develop and deploy code written either in C or
 P4. These programmable devices are powerful and transformational tools for designing network systems
 as they can offer orders-of-magnitude performance improvements when deployed in the right
-context~\cite{when-computer}, such as sequencing where it has show to offer huge benefits for
-consensus~\cite{eris, nopaxos}. In this dissertation we leverage the power of programmable switches
-to exactly this benefit to get fast in-network serialization for RDMA based data structures (Section
-~\ref{chap:swordbox}).
+context~\cite{when-computer}, such as sequencing where it has shown to offer huge benefits for
+consensus~\cite{eris, nopaxos}. In this dissertation, we leverage the power of programmable switches
+to exactly this benefit to get fast in-network serialization for RDMA based data structures
+(Section~\ref{chap:swordbox}).
 
-Most prior proposals for disaggregation consider rack-scale deployments where
-%. They propose a single rack with
-servers are partitioned into roles: compute, memory, and storage, all of which are interconnected by
-a top-of-rack switch~\cite{disandapp,the-machine,intel-rack,firebox,legoos}.  The central role of
-the ToR in this architecture has not gone unnoticed, and researchers have observed that a
-programmable switch can off-load a wide variety of traditional operating system
+Most prior proposals for disaggregation consider rack-scale deployments where servers are
+partitioned into roles: compute, memory, and storage, all of which are interconnected by a
+top-of-rack switch~\cite{disandapp,the-machine,intel-rack,firebox,legoos}. The central role of the
+ToR in this architecture has not gone unnoticed, and researchers have observed that a programmable
+switch can offload a wide variety of traditional operating system
 services~\cite{disandapp,mind,netlock,netkv,netchain,netcache}. The constraints in each case are
-similar: programmable switches have limited memory and processing capabilities.  If the
-computational task is too large packets must be recirculated adding additional latency and reducing
-aggregate bandwidth.  Ideal applications for programmable switches use little memory, require
-minimal processing and deliver outsized performance benefit.
-%from centralization.  , and the billions of operations (in terms of packets) that a switch can
-%process per second.  %
+similar: programmable switches have limited memory and processing capabilities. If the computational
+task is too large packets must be recirculated adding additional latency and reducing aggregate
+bandwidth. Ideal applications for programmable switches use little memory, require minimal
+processing and deliver outsized performance benefit.
 
 Specifically, prior work has shown that programmable switches are able to provide rack-scale
 serialization at low cost~\cite{eris,no-paxos,when-computer,Grant2021InContRes}, manage
 locks~\cite{netlock}, and track the state required to maintain an RDMA reliable
 connection~\cite{tea}. Researchers have even used a programmable switch to implement a centralized
-memory controller including a unified TLB and cache for passive remote memory~\cite{mind}.  Their
-approach is limited, however, by the resource constraints of the switch.  Inspired by
+memory controller including a unified TLB and cache for passive remote memory~\cite{mind}. Their
+approach is limited, however, by the resource constraints of the switch. Inspired by
 performance-enhancing TCP proxies of old~\cite{snoop,rfc3135}, we consider a slightly different
-design point where the authoritative state and control logic remain at the end points.  In
-Chapter~\ref{chap:swordbox} we show that a ToR can observe and, at times, selectively modify RDMA
+design point where the authoritative state and control logic remain at the endpoints. In
+Chapter~\ref{chap:swordbox}, we show that a ToR can observe and, at times, selectively modify RDMA
 packets~\cite{switchml,Grant2021InContRes} in-flight to improve performance while preserving the
 semantics of the underlying RDMA connections.
 
-In Chapter~\ref{chap:swordbox} We will show that a programmable switch can be used to great effect
-in accelerating a shared rdma based data structure by caching a small amount of data and modifying
-operations in flight to reduce (or entirely remove) contention. In the following section I will
+In Chapter~\ref{chap:swordbox}, we will show that a programmable switch can be used to great effect
+in accelerating a shared RDMA based data structure by caching a small amount of data and modifying
+operations in flight to reduce (or entirely remove) contention. In the following section, I will
 describe data structures in disaggregated systems and prior work on NUMA based data structures.
 
-%% Others have proposed
-%% leveraging this observation, along with programmable switches' ability
-%% to manage small amounts of state in network, to provide a number of
-%% in-network services~\cite{when-computer}; Mind, for instance, provides
-%% a unified TLB and cache for disaggregated applications~\cite{mind}.
 
-%% , and . These properties make a top-of-rack
-%% programmable switch ideal for managing remote memory as it can guard
-%% access, maintain connections, and provide serialization primitives for
-%% all clients.
 
-%\todo{RDMA middlebox (find citations ~\cite{mind,switchml})}
-
-% ~\todo{Alex - lots of downsides what are the upsides?} Programmable switches differ from other
-% programmable network devices in that they have orders of magnitude more aggregate bandwidth, a
-% switch specific architecture (often pipelined~\cite{tofino2}), and run on P4 code in most cases.
-% %%
-% Switches typically have an ingress and egress pipeline which is broken into multiple stages. In the
-% case of Tofino 2 both ingress and egress have 12 stages. Packets pass through one or more stages and
-% are set for transmission once each stage of the pipeline used by the program has executed. Per stage
-% computation is limited, usually to a few instructions, such as fetching from a lookup table,
-% processing a conditional, or modifying and storing packet header data. The result is that P4
-% programs have a constrained programming model. Loops and recursion are not easily supported and
-% branching is limited. Finally, switch memory is highly constrained per pipeline stage. All P4
-% accessible memory is SRAM of which each switch only has a few megabytes.
-% %%
-% Ideal programs for programmable switches provide a high degree of benefit from a small amount of
-% computation. As an example a network sequencer which gives a unique monotonic sequence number to
-% each packet is well suited for a programmable switch as it requires only a small amount of
-% storage space, and limited amount of computation per packet.
 
 \section{Disaggregated Systems and Data Structures}
 \label{sec:disaggregated-data-structures}
