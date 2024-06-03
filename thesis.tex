@@ -637,37 +637,43 @@ describe data structures in disaggregated systems and prior work on NUMA based d
 
 \section{Disaggregated Systems and Data Structures}
 \label{sec:disaggregated-data-structures}
-The aforementioned trends and technologies have enabled disaggregated systems to become a reality.
-A common model for disaggregated memory is that the remote memory of another machine can be used as
-a swap space or as a remote cache rather than disk. In this model applications are apportioned a
-partition of remote memory for it's pages~\cite{infiniswap,fastswap,leap,blade-server,legoos,hydra},
-objects~\cite{aifm,carbink}, or cache lines~\cite{kona}. These systems focus on improving
-performance by reducing the number of remote memory accesses that an application has to make. In
-general this is done by identifying hot and cold memory then prefetching and evicting data to reduce
-the number of faults to remote memory.  Additionally these systems focus on fault-tolerance by
-replicating or erasure coding memory across replicated memory servers~\cite{hydra}.
+
+
+The aforementioned trends and technologies have enabled disaggregated systems to become a reality. A
+common model for disaggregated memory is that the remote memory of another machine can be used as a
+swap space or as a remote cache rather than disk. In this model, applications are apportioned a
+partition of remote memory for their
+pages~\cite{infiniswap,fastswap,leap,blade-server,legoos,hydra}, objects~\cite{aifm,carbink}, or
+cache lines~\cite{kona}. These systems focus on improving performance by reducing the number of
+remote memory accesses that an application has to make. In general, this is done by identifying hot
+and cold memory, then prefetching and evicting data to reduce the number of faults to remote memory.
+Additionally, these systems focus on fault-tolerance by replicating or erasure coding memory across
+replicated memory servers~\cite{hydra}.
 
 A commonality between each of these memory systems is the lack of sharing. Operations common to
 non-disaggregated systems like mmapping a shared page are not supported by these systems. In cases
-where shared access is supported using POSIX interfaces performance is not considered to be a
+where shared access is supported using POSIX interfaces, performance is not considered to be a
 concern~\cite{Regions}. Disaggregated systems that share efficiently, at the time of writing, are
-entirely custom built data structures, the majority of which are key-value stores, transaction
-processors or caches~\cite{clover, sherman, race, fusee, rolex, ford, ditto}. Each of these system
+entirely custom-built data structures, the majority of which are key-value stores, transaction
+processors, or caches~\cite{clover, sherman, race, fusee, rolex, ford, ditto}. Each of these systems
 takes on a significant burden in terms of development. Most develop their own fault tolerance,
-replication, recovering, allocation, and serialization protocols. In nearly every case the
+replication, recovering, allocation, and serialization protocols. In nearly every case, the
 performance of these systems is determined by the techniques used to serialize writes on the index
 of the data structure.
 
-In this dissertation we take two approaches to enable sharing and reduce or remove contention. In
-the first approach we use a programmable switch as a centralized contention resolver
-(Chapter~\ref{chap:swordbox}), in the second we design a new key-value store which takes advantage
+In this dissertation, we take two approaches to enable sharing and reduce or remove contention. In
+the first approach, we use a programmable switch as a centralized contention resolver
+(Chapter~\ref{chap:swordbox}), in the second, we design a new key-value store which takes advantage
 of data structure design (Chapter~\ref{chap:rcuckoo}). These approaches take advantage of distinct
-data structure properties. In the following subsections we will describe differences between the
-properties in terms of ~\todo{come back and point to sections.}.
+data structure properties. In the following subsections, we will describe differences between the
+properties in terms of \todo{come back and point to sections.}.
+
 
 
 \subsection{Sparse vs Dense Data Structures}
 \label{sec:sparse-dense}
+
+
 Data structures in disaggregated systems can be broadly categorized as either sparse or dense.
 Sparse data structures are pointer based, such as linked lists and trees. Dense data structures
 reside in a linear block of memory, such as an array or heap. These two categories form a spectrum
@@ -757,13 +763,11 @@ key-value stores typically route write operations through a CPU to serialize req
 
 Despite the similarities between the two classes of systems, there is no agreement on if data
 structures should be optimistic or lock based. 
-%%
 In Chapter~\ref{chap:rcuckoo} we design a lock based hash table which merges the quality of Cuckoo
 and Hopscotch hashing to improve locality, and enable efficient precomputation. In the following
 Section~\ref{sec:lock-vs-op} we describe how different disaggregated systems have used locks and
 optimistic concurrency, and in Section~\ref{sec:hashtables} we describe the properties of Cuckoo and
 Hopscotch hashing.
-%%
 Our stance in Chapter~\ref{chap:swordbox} is that both locks and optimistic concurrency have their
 place in a disaggregated systems, and that a middlebox can be used to accelerate both. 
 
