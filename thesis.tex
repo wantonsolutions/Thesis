@@ -661,13 +661,11 @@ replication, recovering, allocation, and serialization protocols. In nearly ever
 performance of these systems is determined by the techniques used to serialize writes on the index
 of the data structure.
 
-In this dissertation, we take two approaches to enable sharing and reduce or remove contention. In
-the first approach, we use a programmable switch as a centralized contention resolver
-(Chapter~\ref{chap:swordbox}), in the second, we design a new key-value store which takes advantage
-of data structure design (Chapter~\ref{chap:rcuckoo}). These approaches take advantage of distinct
-data structure properties. In the following subsections, we will describe differences between the
-properties in terms of \todo{come back and point to sections.}.
-
+In this section I describe the challenges of building a shared data structure in disaggregated
+memory. Pointers and pointer chasing are expensive in disaggregated memory. I describe the tradeoffs
+of using pointer based structures vs dense structures in Section~\ref{sec:sparse-dense}, then we
+cover these same tradeoffs in the context of hash tables, and opportunistic vs lock based
+concurrency schemes.
 
 
 \subsection{Sparse vs Dense Data Structures}
