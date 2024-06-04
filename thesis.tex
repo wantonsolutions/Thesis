@@ -958,14 +958,23 @@ design space (with and without programmable network devices). \sword\ demonstrat
 be used to remove contention entirely and achieve performance equal to the underlying network
 capabilities. RCuckoo demonstrates that by carefully constructing algorithms, we can increase
 locality and take advantage of features in commodity network hardware (large sequential RDMA reads
-and on-NIC lock tables).
+and on-NIC lock tables). Together these two works provide strong evidence that:
 
-These two systems only demonstrate two design points where many more could exist. For instance,
-\sword\ assumes that a single programmable switch sees all traffic within the rack and that a
-developer has unfettered access to P4 programs running on the switch. Similar strategies could
-potentially be used with a less generic programming interface such as OpenFlow, as demonstrated by
-NetKV~\cite{netkv}. However, the data structures may require significant redesign to adapt to
-OpenFlow's limited programming model.
+\begin{center}
+\textit{Data structures can be optimized for disaggregated memory by leveraging network programmability} \\
+\end{center}
+
+The performance gains of \sword\ and RCuckoo are significant, but they are far from the final word
+on disaggregated data structures. \sword, for instance, focuses only on locks and a single key-value
+store. There are still open questions as to which data structures \sword\ could aid in accelerating.
+Simultaneously, RCuckoo focuses only on a single index. More generally, locality optimizations could
+potentially provide benefits to a wide variety of data structures. These two systems only
+demonstrate two design points where many more could exist. For instance, \sword\ assumes that a
+single programmable switch sees all traffic within the rack and that a developer has unfettered
+access to P4 programs running on the switch. Similar strategies could potentially be used with a
+less generic programming interface such as OpenFlow, as demonstrated by NetKV~\cite{netkv}. However,
+the data structures may require significant redesign to adapt to OpenFlow's limited programming
+model.
 
 Many off-the-shelf ARM-based or FPGA-based SmartNICs could be used to implement \sword\ as well as
 more complex data structures. While SmartNICs lack a global view of a rack, ARM-based SmartNICs have
