@@ -867,7 +867,7 @@ of the end of each key's linked list to avoid traversals. By implementing a shar
 
 
 Proposals for disaggregated memory systems often forgo sharing entirely in favor of partitioned
-regions~\cite{infiniswap,fastswap,leap,legoos,blade}. Each of these proposals cuts at a fundamental
+regions~\cite{infiniswap,fastswap,leap,legoos}. Each of these proposals cuts at a fundamental
 goal of remote memory, which is to increase capacity via pooling and reduce the need to increase CPU
 pin counts for increased memory bandwidth. The unfortunate result is that these systems do not meet
 the same expectations as local memory systems. For instance, any system requiring mmap with
@@ -906,21 +906,39 @@ memory system as a benchmark for future systems to compare to.
 \input{swordbox/tmp_sigcomm}
 \input{swordbox/implementation}
 \input{swordbox/eval}
-\input{swordbox/limitations}
-\input{swordbox/conclusion}
+% \input{swordbox/limitations}
+% \input{swordbox/conclusion}
+
+\section{The cost of programmable switches}
+
+As shown throughout its evaluation, \sword\ offers significant performance improvements over
+existing end-host solutions. The key insight behind \sword\ is that a small amount of
+programmability in the network combined with a massive amount of bandwidth can offer
+order-of-magnitude performance improvements for existing data structures, both lock-based and
+optimistic. However, \sword\ comes at a non-trivial cost. Programmable switches are expensive,
+complex, and difficult to program. While \sword\ offers a solution to the problem of contention, it
+is likely that only the most performance-critical applications would be likely to qualify for the
+care and attention required for crafting a \sword-like solution. Further complicating the matter is
+the fact that the Tofino series of switches has been discontinued by Intel~\cite{tofino-cancelled}.
+
+At a data structure level, the memory limitations of a switch pose a significant challenge for
+generalization. In the case of append operations made to a linked list, only the final value of the
+list needs to be cached to ensure the data structure's integrity. However, inserting into an
+arbitrary location in the list would require the entire list to be stored in cache. Given these
+operational complexities, high cost of development, and data structure limitations, we ask the
+question: \textit{What other techniques can be used to improve the performance of disaggregated data
+structures?}.
 
 
 \chapter{Disaggregated Cuckoo Hashing}
 \label{chap:rcuckoo}
 
 
-While \sword\ provides a significant performance boost for shared remote memory systems, it is not a
-general-purpose solution. Although \sword\ is able to provide faster locking and faster optimistic
-concurrency, it does not handle all data structures and, more importantly, requires the addition of
-a programmable switch to the network. The need for programmable hardware is a significant barrier to
-entry for many data center operators, and while we believe that for the most performance-stringent
-applications, the cost is worth it, we also believe that alternative solutions may be better for
-average operators given their current deployments.
+\sword\ takes the stance that an additional piece of in-network equipment can be used to accelerate
+an existing data structure. But what if we could just make the data structure itself faster? In this
+chapter, we explore the design of a disaggregated key-value store, RCuckoo, which aims to answer
+exactly this question. Instead of adding a new piece of equipment to accelerate a data structure,
+RCuckoo aims to get better performance by co-designing itself with the network.
 
 As described in Section~\ref{sec:sparse-dense}, there are a variety of data structure-specific
 optimizations that have been leveraged to improve the performance of disaggregated data structures.
@@ -929,6 +947,7 @@ cost of round trips to remote memory and the fact that network capacity continue
 astonishing rate. In this chapter, we make the case for locality-optimized cuckoo hashing and show
 how it can be used to improve performance, reduce contention, and make use of the latest trends in
 network hardware.
+
 
 
 
