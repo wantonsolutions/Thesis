@@ -461,15 +461,6 @@
 	url          = {https://www.usenix.org/conference/nsdi23/presentation/bansal}
 }
 
-@inproceedings{eris,
-	title        = {Eris: Coordination-Free Consistent Transactions using Network Multi-Sequencing},
-	author       = {Li, Jialin and Michael, Ellis and Ports, Dan R. K.},
-	year         = 2017,
-	month        = {October},
-	booktitle    = {Proceedings of the 26th ACM Symposium on Operating Systems Principles (SOSP '17)},
-	url          = {https://www.microsoft.com/en-us/research/publication/eris-coordination-free-consistent-transactions-using-network-multi-sequencing/},
-	edition      = {Proceedings of the 26th ACM Symposium on Operating Systems Principles (SOSP '17)}
-}
 @inproceedings{erpc,
 	title        = {Datacenter {RPCs} can be General and Fast},
 	author       = {Anuj Kalia and Michael Kaminsky and David Andersen},
@@ -958,22 +949,6 @@
 	url          = {https://doi.org/10.1145/3477132.3483561},
 	abstract     = {Memory disaggregation promises transparent elasticity, high resource utilization and hardware heterogeneity in data centers by physically separating memory and compute into network-attached resource "blades". However, existing designs achieve performance at the cost of resource elasticity, restricting memory sharing to a single compute blade to avoid costly memory coherence traffic over the network.In this work, we show that emerging programmable network switches can enable an efficient shared memory abstraction for disaggregated architectures by placing memory management logic in the network fabric. We find that centralizing memory management in the network permits bandwidth and latency-efficient realization of in-network cache coherence protocols, while programmable switch ASICs support other memory management logic at line-rate. We realize these insights into MIND1, an in-network memory management unit for rack-scale disaggregation. MIND enables transparent resource elasticity while matching the performance of prior memory disaggregation proposals for real-world workloads.},
 	keywords     = {Memory disaggregation, Programmable networks},
-	numpages     = 17
-}
-@inproceedings{mira,
-	title        = {Mira: A Program-Behavior-Guided Far Memory System},
-	author       = {Guo, Zhiyuan and He, Zijian and Zhang, Yiying},
-	year         = 2023,
-	booktitle    = {Proceedings of the 29th Symposium on Operating Systems Principles},
-	location     = {, Koblenz, Germany,},
-	publisher    = {Association for Computing Machinery},
-	address      = {New York, NY, USA},
-	series       = {SOSP '23},
-	pages        = {692–708},
-	doi          = {10.1145/3600006.3613157},
-	isbn         = 9798400702297,
-	url          = {https://doi.org/10.1145/3600006.3613157},
-	abstract     = {Far memory, where memory accesses are non-local, has become more popular in recent years as a solution to expand memory size and avoid memory stranding. Prior far memory systems have taken two approaches: transparently swap memory pages between local and far memory, and utilizing new programming models to explicitly move fine-grained data between local and far memory. The former requires no program changes but comes with performance penalty. The latter has potentially better performance but requires significant program changes.We propose a new far-memory approach by automatically inferring program behavior and efficiently utilizing it to improve application performance. With this idea, we build Mira. Mira utilizes program analysis results, profiled execution information, and system environments together to guide code compilation and system configurations for far memory. Our evaluation shows that Mira outperforms prior swap-based and programming-model-based systems by up to 18 times.},
 	numpages     = 17
 }
 @inproceedings{mom,
@@ -1579,6 +1554,7 @@
 }
 @misc{tofino2,
 	title        = {Intel Tofino 2 P4 Programmability with More Bandwidth},
+	author = {Intel},
 	year         = 2020,
 	howpublished = {\url{https://www.intel.com/content/www/us/en/products/network-io/programmable-ethernet-switch/tofino-2-series/tofino-2.html}}
 }
@@ -1920,7 +1896,7 @@ note = {Selected as an IEEE Micro TopPick},
 }
 
 @misc{pensando,
-   title={Pensando Infrastructure Accelerators}
+   title={Pensando Infrastructure Accelerators},
    author={Pensando},
    year={2020},
    url = {https://www.amd.com/en/accelerators/pensando}
@@ -1943,23 +1919,6 @@ location = {<conf-loc>, <city>Koblenz</city>, <country>Germany</country>, </conf
 series = {SOSP '23}
 }
 
-@inproceedings{trackfm,
-author = {Tauro, Brian R. and Suchy, Brian and Campanoni, Simone and Dinda, Peter and Hale, Kyle C.},
-title = {TrackFM: Far-out Compiler Support for a Far Memory World},
-year = {2024},
-isbn = {9798400703720},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-url = {https://doi.org/10.1145/3617232.3624856},
-doi = {10.1145/3617232.3624856},
-abstract = {Large memory workloads with favorable locality of reference can benefit by extending the memory hierarchy across machines. Systems that enable such far memory configurations can improve application performance and overall memory utilization in a cluster. There are two current alternatives for software-based far memory: kernel-based and library-based. Kernel-based approaches sacrifice performance to achieve programmer transparency, while library-based approaches sacrifice programmer transparency to achieve performance. We argue for a novel third approach, the compiler-based approach, which sacrifices neither performance nor programmer transparency. Modern compiler analysis and transformation techniques, combined with a suitable tightly-coupled runtime system, enable this approach. We describe the design, implementation, and evaluation of TrackFM, a new compiler-based far memory system. Through extensive benchmarking, we demonstrate that TrackFM outperforms kernel-based approaches by up to 2\texttimes{} while retaining their programmer transparency, and that TrackFM can perform similarly to a state-of-the-art library-based system (within 10\%). The application is merely recompiled to reap these benefits.},
-booktitle = {Proceedings of the 29th ACM International Conference on Architectural Support for Programming Languages and Operating Systems, Volume 1},
-pages = {401–419},
-numpages = {19},
-keywords = {disaggregated memory, compilers, far memory},
-location = {<conf-loc>, <city>La Jolla</city>, <state>CA</state>, <country>USA</country>, </conf-loc>},
-series = {ASPLOS '24}
-}
 
 @ARTICLE{moore,
   author={Schaller, R.R.},
@@ -1971,3 +1930,16 @@ series = {ASPLOS '24}
   pages={52-59},
   keywords={Moore's Law;Silicon;Technological innovation;Consumer products;Roads},
   doi={10.1109/6.591665}}
+
+@inproceedings {no-paxos,
+	author = {Jialin Li and Ellis Michael and Naveen Kr. Sharma and Adriana Szekeres and Dan R. K. Ports},
+	title = {Just Say {NO} to Paxos Overhead: Replacing Consensus with Network Ordering},
+	booktitle = {12th USENIX Symposium on Operating Systems Design and Implementation (OSDI 16)},
+	year = {2016},
+	isbn = {978-1-931971-33-1},
+	address = {Savannah, GA},
+	pages = {467--483},
+	url = {https://www.usenix.org/conference/osdi16/technical-sessions/presentation/li},
+	publisher = {USENIX Association},
+	month = nov
+}

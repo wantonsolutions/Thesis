@@ -653,7 +653,7 @@ replicated memory servers~\cite{hydra}.
 A commonality between each of these memory systems is the lack of sharing. Operations common to
 non-disaggregated systems like mmapping a shared page are not supported by these systems. In cases
 where shared access is supported using POSIX interfaces, performance is not considered to be a
-concern~\cite{Regions}. Disaggregated systems that share efficiently, at the time of writing, are
+concern~\cite{regions}. Disaggregated systems that share efficiently, at the time of writing, are
 entirely custom-built data structures, the majority of which are key-value stores, transaction
 processors, or caches~\cite{clover, sherman, race, fusee, rolex, ford, ditto}. Each of these systems
 takes on a significant burden in terms of development. Most develop their own fault tolerance,
