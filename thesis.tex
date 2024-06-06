@@ -967,44 +967,72 @@ network hardware.
 
 \chapter{Conclusion}
 
-This dissertation proposes two systems for sharing remote memory: \sword, a programmable
-switch-based caching system that removes contention from existing disaggregated programs, and
-RCuckoo, a cuckoo hash designed specifically for one-sided RDMA access. Both systems push the
-performance and scalability limits of shared disaggregated data structures at two points in the
-design space (with and without programmable network devices). \sword\ demonstrates how caching can
-be used to remove contention entirely and achieve performance equal to the underlying network
-capabilities. RCuckoo demonstrates that by carefully constructing algorithms, we can increase
-locality and take advantage of features in commodity network hardware (large sequential RDMA reads
-and on-NIC lock tables). Together th
-Writing objects: 100% (5/5), 642 bytes | 642.00 KiB/s, done.ese two works provide strong evidence that:
+This dissertation explores the problems and solutions for sharing disaggregated memory. The high
+access latency and extreme cost of contention in far-memory over RDMA cause many data structures,
+which would otherwise be efficient, to experience performance collapse. Stale caches cause
+opportunistic data structures to fail under contention, and pointer-based data structures incur
+additional round trips when far-memory pointers need to be resolved. Using existing techniques,
+applications can be made to work, but they simply have to incur the penalties of sharing when under
+contention.
+
+We have presented two systems, \textsc{Sword} and RCuckoo, that present two different strategies for
+improving the performance of disaggregated data structures. \textsc{Sword} uses a programmable
+switch as a centralized cache to remove contention from shared data structures and to accelerate the
+use of locks on lock-based structures. RCuckoo uses locality within a hash table to improve the
+performance of reads and greatly reduce the cost of acquiring locks stored on a NIC. Together these
+works provide strong evidence that:
+
 
 \begin{center}
 \textit{Data structures can be optimized for disaggregated memory by leveraging network programmability} \\
 \end{center}
 
-The performance gains of \sword\ and RCuckoo are significant, but they are far from the final word
-on disaggregated data structures. \sword, for instance, focuses only on locks and a single key-value
-store. There are still open questions as to which data structures \sword\ could aid in accelerating.
-Simultaneously, RCuckoo focuses only on a single index. More generally, locality optimizations could
-potentially provide benefits to a wide variety of data structures. These two systems only
-demonstrate two design points where many more could exist. For instance, \sword\ assumes that a
-single programmable switch sees all traffic within the rack and that a developer has unfettered
-access to P4 programs running on the switch. Similar strategies could potentially be used with a
-less generic programming interface such as OpenFlow, as demonstrated by NetKV~\cite{netkv}. However,
-the data structures may require significant redesign to adapt to OpenFlow's limited programming
-model.
 
-Many off-the-shelf ARM-based or FPGA-based SmartNICs could be used to implement \sword\ as well as
-more complex data structures. While SmartNICs lack a global view of a rack, ARM-based SmartNICs have
-a global view of the machine they are attached to and could be used to implement similar caching
-strategies. SmartNICs typically have much more available memory than programmable switches and could
-likely handle much larger data structures than \sword. For example, inserting into a linked list
-(because the entire linked list needs to be stored in memory) is a \textit{difficult} data structure
-for \sword\ to handle. This is unlikely to be the same on a SmartNIC with a few GB of memory.
-SmartNICs could be used to cache index structures for large structures like B-Trees and use their
-limited compute power to steer read and write requests similar to \sword. More generically, they
-could be used for simple functions that are difficult to implement in remote memory, such as an
-allocator or scheduler that needs to maintain centralized state.
+In this chapter we begin by summarizing the contributions of this dissertation and their
+relationship to our thesis claim, and we conclude with a discussion of this works limitations paired
+with future work directions in this area of research.
+
+\subsection{Contributions}
+
+
+In this chapter, we begin by summarizing the contributions of this dissertation and their relationship to our thesis claim. We conclude with a discussion of this work's limitations paired with future work directions in this area of research.
+
+\subsection{Contributions}
+
+In this dissertation, we have contributed to the state of the art in disaggregated memory systems by:
+
+\begin{itemize}
+    \item Demonstrating the significant performance gains achievable by using a programmable switch to cache the contended state of a data structure and resolve the conflicts in the network.
+    \item Showing that the instruction-level bottlenecks of RDMA atomic operations can be alleviated by using connection-based sequencing as an alternative serialization mechanism.
+    \item Analyzing disaggregated data structures and implementing locality-based RDMA optimizations for a disaggregated cuckoo hash.
+    \item Designing and implementing lock-based fault tolerance for a disaggregated cuckoo hash.
+\end{itemize}
+
+We believe that these contributions are significant stepping stones towards the design of future
+efficient disaggregated systems. In the case of \textsc{Sword}, which demonstrated acceleration on
+list appends, it could be adapted to other data structures with similar properties, for example,
+log-structured systems. We believe that the insight behind RCuckoo's locality-based optimizations is
+general and that many data structures could benefit from localizing their data in a similar fashion.
+
+\subsection{Future Work}
+
+
+Each of the works presented in this dissertation is a step towards more efficient disaggregated
+systems. In this section, we speculate on future directions for this area of research based on the
+limitations of the work presented here.
+
+Many off-the-shelf ARM-based or FPGA-based SmartNICs could be used to implement \textsc{Sword} as
+well as more complex data structures. While SmartNICs lack a global view of a rack, ARM-based
+SmartNICs have a global view of the machine they are attached to and could be used to implement
+similar caching strategies. SmartNICs typically have much more available memory than programmable
+switches and could likely handle much larger data structures than \textsc{Sword}. For example,
+inserting into a linked list (because the entire linked list needs to be stored in memory) is a
+\textit{difficult} data structure for \textsc{Sword} to handle. This is unlikely to be the same on a
+SmartNIC with a few GB of memory. SmartNICs could be used to cache index structures for large
+structures like B-Trees and use their limited compute power to steer read and write requests similar
+to \textsc{Sword}. More generically, they could be used for simple functions that are difficult to
+implement in remote memory, such as an allocator or scheduler that needs to maintain centralized
+state.
 
 A further and more generic option for NIC designers is to extend the interface for RDMA to better
 accommodate complex one-sided data structures. While calls for pointer chasing are common, calls for
@@ -1016,29 +1044,30 @@ of limited width. Extensions for larger CAS sizes would enable more efficient da
 as in the case of RACE and FUSEE, which must limit the size of their key-value pairs due to the lack
 of space in the 64-bit RDMA CAS.
 
-Network-datastructure co-design is a powerful but underexplored area. In the case of \sword, Clover
-was a good fit for the system as only the tail pointer of linked lists needed to be stored on the
-switch. Other data structures do not always exhibit this property. Log-based or append-only data
-structures have promise here, as the point of contention (the end of the log) can be managed with
-relatively little state. Future work could enable \textit{append-mostly} data structures. Sherman,
-for instance, enjoys a degree of associativity at its leaf nodes by having associative leaves. Other
-data structures may be able to take advantage of similar properties like appending updates to a
-shared log and eventually combining them into a consolidated data structure.
+Network-data structure co-design is a powerful but underexplored area. In the case of
+\textsc{Sword}, Clover was a good fit for the system as only the tail pointer of linked lists needed
+to be stored on the switch. Other data structures do not always exhibit this property. Log-based or
+append-only data structures have promise here, as the point of contention (the end of the log) can
+be managed with relatively little state. Future work could enable \textit{append-mostly} data
+structures. Sherman, for instance, enjoys a degree of associativity at its leaf nodes by having
+associative leaves. Other data structures may be able to take advantage of similar properties, like
+appending updates to a shared log and eventually combining them into a consolidated data structure.
 
 Most proposals for disaggregated systems are focused on rack-scale deployments. As intra-rack
 latencies get lower and lower, and disaggregated technology gets better, intra-rack solutions will
 become more tenable. An early example is \textit{Disaggregating Stateful Network
 Functions}~\cite{dsnf} and \textit{SuperNIC}~\cite{supernic}, which take the stance that a large
 pool of dedicated accelerators can provide a significant portion of the network functions for a data
-center. In this line of work, routing is paramount and underexplored. \sword\ assumes a centralized
-model as it needs to track an entire data structure. However, a future distributed model could
-potentially scale to multiple racks if the data-dependent operations were routed through the correct
-network components.
+center. In this line of work, routing is paramount and underexplored. {\sword} assumes a
+centralized model as it needs to track an entire data structure. However, a future distributed model
+could potentially scale to multiple racks if the data-dependent operations were routed through the
+correct network components.
 
 The future for disaggregated systems is bright. This work has demonstrated that shared remote memory
 can be made efficient with programmable networking hardware and that, through careful design, data
 structures can be adapted to disaggregated memory. Hopefully, future work will build on these
 techniques and enable a shift towards mainstream disaggregated computing.
+
 
 
 
