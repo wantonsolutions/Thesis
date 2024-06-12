@@ -22,7 +22,7 @@
 %commands
 
 \newcommand{\sword}{SwordBox}
-\newcommand{\thesistitle}{Disaggregated Data Structures: Sharing and Contention with RDMA and Programmable Networks}
+\newcommand{\thesistitle}{Disaggregated Data Structures: Sharing and Contention \\ with RDMA and Programmable Networks}
 
 \usepackage{multirow}
 \usepackage{tikz}
@@ -259,7 +259,7 @@ efficiency and managing increased heterogeneity. In the disaggregated model, a s
 not monolithically reside in a 1U, 2U, or 4U server form factor. Instead, each resource (i.e.,
 compute, memory, storage) is deployed separately to a dedicated machine and interconnected via a
 fast network. Servers are composed dynamically from these resources, which enables them to be
-provisioned for their exact purpose~\cite{dis-and-app,infiniswap,blade-server,decible,legoos}. This
+provisioned for their exact purpose~\cite{disandapp,infiniswap,blade-server,decible,legoos}. This
 model enables resource pooling and sharing, which in turn leads to higher
 efficiency~\cite{regions,fastswap,dsnf,aifm,supernic,ditto}.
 
@@ -394,7 +394,7 @@ pairs and outperforms other systems on read-mostly workloads.
 
 
 Disaggregated systems rely on a variety of state-of-the-art technologies. We begin this section by
-describing disaggregation generally and technologies that enable it (Section~\ref{sec }). The
+describing disaggregation generally and technologies that enable it (Section~\ref{sec:disaggregation}). The
 disaggregated networks described in this dissertation are fast (100Gbps+) and rely heavily on
 one-sided RDMA operations. In Section~\ref{sec:rdma}, we describe RDMA, the connections which enable
 one-sided operations, their consistency guarantees, and the atomic operations which serialize
@@ -534,7 +534,7 @@ Atomic verbs such as compare-and-swap (CAS) and fetch-and-add (FAA) are essentia
 locks or opportunistic concurrency. Atomics are limited to 64-bit operations and bottleneck at lower
 rates than reads and writes because they block requests on data-dependent addresses while waiting on
 Peripheral Component Interconnect Express (PCIe) round trips \cite{design-guidelines,sherman}.
-Figure~\ref{fig } shows that the NICs in our testbed (100-Gbps NVIDIA Mellanox ConnectX-5s) are
+Figure~\ref{fig:rdma_concur} shows that the NICs in our testbed (100-Gbps NVIDIA Mellanox ConnectX-5s) are
 capable of serving many tens of millions of RDMA operations per second (limited only by link speed),
 but CAS operations to remote server memory top out around 50 MOPS.
 
@@ -616,7 +616,7 @@ bandwidth. Ideal applications for programmable switches use little memory, requi
 processing and deliver outsized performance benefit.
 
 Specifically, prior work has shown that programmable switches are able to provide rack-scale
-serialization at low cost~\cite{eris,no-paxos,when-computer,Grant2021InContRes}, manage
+serialization at low cost~\cite{eris,no-paxos,when-computer}, manage
 locks~\cite{netlock}, and track the state required to maintain an RDMA reliable
 connection~\cite{tea}. Researchers have even used a programmable switch to implement a centralized
 memory controller including a unified TLB and cache for passive remote memory~\cite{mind}. Their
@@ -624,7 +624,7 @@ approach is limited, however, by the resource constraints of the switch. Inspire
 performance-enhancing TCP proxies of old~\cite{snoop,rfc3135}, we consider a slightly different
 design point where the authoritative state and control logic remain at the endpoints. In
 Chapter~\ref{chap:swordbox}, we show that a ToR can observe and, at times, selectively modify RDMA
-packets~\cite{switchml,Grant2021InContRes} in-flight to improve performance while preserving the
+packets~\cite{switchml} in-flight to improve performance while preserving the
 semantics of the underlying RDMA connections.
 
 In Chapter~\ref{chap:swordbox}, we will show that a programmable switch can be used to great effect
@@ -940,13 +940,12 @@ chapter, we explore the design of a disaggregated key-value store, RCuckoo, whic
 exactly this question. Instead of adding a new piece of equipment to accelerate a data structure,
 RCuckoo aims to get better performance by co-designing itself with the network.
 
-As described in Section~\ref{sec:sparse-dense}, there are a variety of data structure-specific
-optimizations that have been leveraged to improve the performance of disaggregated data structures.
-Our position in this work is that locality-based optimizations are underutilized due to the high
-cost of round trips to remote memory and the fact that network capacity continues to grow at an
-astonishing rate. In this chapter, we make the case for locality-optimized cuckoo hashing and show
-how it can be used to improve performance, reduce contention, and make use of the latest trends in
-network hardware.
+There are a variety of data structure-specific optimizations that have been leveraged to improve the
+performance of disaggregated data structures.  Our position in this work is that locality-based
+optimizations are underutilized due to the high cost of round trips to remote memory and the fact
+that network capacity continues to grow at an astonishing rate. In this chapter, we make the case
+for locality-optimized cuckoo hashing and show how it can be used to improve performance, reduce
+contention, and make use of the latest trends in network hardware.
 
 
 
@@ -975,8 +974,8 @@ additional round trips when far-memory pointers need to be resolved. Using exist
 applications can be made to work, but they simply have to incur the penalties of sharing when under
 contention.
 
-We have presented two systems, \textsc{Sword} and RCuckoo, that present two different strategies for
-improving the performance of disaggregated data structures. \textsc{Sword} uses a programmable
+We have presented two systems, {\sword} and RCuckoo, that present two different strategies for
+improving the performance of disaggregated data structures. {\sword} uses a programmable
 switch as a centralized cache to remove contention from shared data structures and to accelerate the
 use of locks on lock-based structures. RCuckoo uses locality within a hash table to improve the
 performance of reads and greatly reduce the cost of acquiring locks stored on a NIC. Together these
@@ -992,12 +991,7 @@ In this chapter we begin by summarizing the contributions of this dissertation a
 relationship to our thesis claim, and we conclude with a discussion of this works limitations paired
 with future work directions in this area of research.
 
-\subsection{Contributions}
-
-
-In this chapter, we begin by summarizing the contributions of this dissertation and their relationship to our thesis claim. We conclude with a discussion of this work's limitations paired with future work directions in this area of research.
-
-\subsection{Contributions}
+\section{Contributions}
 
 In this dissertation, we have contributed to the state of the art in disaggregated memory systems by:
 
@@ -1009,43 +1003,43 @@ In this dissertation, we have contributed to the state of the art in disaggregat
 \end{itemize}
 
 We believe that these contributions are significant stepping stones towards the design of future
-efficient disaggregated systems. In the case of \textsc{Sword}, which demonstrated acceleration on
+efficient disaggregated systems. In the case of {\sword}, which demonstrated acceleration on
 list appends, it could be adapted to other data structures with similar properties, for example,
 log-structured systems. We believe that the insight behind RCuckoo's locality-based optimizations is
 general and that many data structures could benefit from localizing their data in a similar fashion.
 
-\subsection{Future Work}
+\section{Future Work}
 
 
 Each of the works presented in this dissertation is a step towards more efficient disaggregated
 systems. In this section, we speculate on future directions for this area of research based on the
 limitations of the work presented here.
 
-Many off-the-shelf ARM-based or FPGA-based SmartNICs could be used to implement \textsc{Sword} as
-well as more complex data structures. While SmartNICs lack a global view of a rack, ARM-based
-SmartNICs have a global view of the machine they are attached to and could be used to implement
-similar caching strategies. SmartNICs typically have much more available memory than programmable
-switches and could likely handle much larger data structures than \textsc{Sword}. For example,
-inserting into a linked list (because the entire linked list needs to be stored in memory) is a
-\textit{difficult} data structure for \textsc{Sword} to handle. This is unlikely to be the same on a
-SmartNIC with a few GB of memory. SmartNICs could be used to cache index structures for large
-structures like B-Trees and use their limited compute power to steer read and write requests similar
-to \textsc{Sword}. More generically, they could be used for simple functions that are difficult to
-implement in remote memory, such as an allocator or scheduler that needs to maintain centralized
-state.
+Many off-the-shelf ARM-based or FPGA-based SmartNICs could be used to implement {\sword} as well as
+more complex data structures. While SmartNICs lack a global view of a rack, they have a global view
+of the machine they are attached to and could be used to implement similar caching strategies.
+SmartNICs typically have much more available memory than programmable switches and could likely
+handle much larger data structures than {\sword}. For example, inserting into a linked list (because
+the entire linked list needs to be stored in memory) is a \textit{difficult} data structure for
+{\sword} to handle. This is unlikely to be the same on a SmartNIC with a few GB of memory. SmartNICs
+could be used to cache index structures for large structures like B-Trees and use their limited
+compute power to steer read and write requests similar to {\sword}. More generically, they could be
+used for simple functions that are difficult to implement in remote memory, such as an allocator or
+scheduler that needs to maintain centralized state.
 
 A further and more generic option for NIC designers is to extend the interface for RDMA to better
 accommodate complex one-sided data structures. While calls for pointer chasing are common, calls for
 more complex atomic operations are less so~\cite{prism, clio}. The algorithms community has designed
 many wait-free and lockless data structures such as binary trees and heaps that make use of
 multi-CAS. The ability to CAS multiple addresses simultaneously could open up disaggregation to many
-pointer-based data structures that would currently be unimplementable. Simultaneous CAS and FAA are
-of limited width. Extensions for larger CAS sizes would enable more efficient data structures, such
-as in the case of RACE and FUSEE, which must limit the size of their key-value pairs due to the lack
-of space in the 64-bit RDMA CAS.
+pointer-based data structures that would currently be difficult to implement with a single CAS, such
+as any structure which requires multiple pointers to be updated atomically, like a doubly linked
+list. Simultaneously CAS and FAA are of limited width. Extensions for larger CAS sizes would enable
+more efficient data structures, such as in the case of RACE and FUSEE, which must limit the size of
+their key-value pairs due to the lack of space in the 64-bit RDMA CAS.
 
 Network-data structure co-design is a powerful but underexplored area. In the case of
-\textsc{Sword}, Clover was a good fit for the system as only the tail pointer of linked lists needed
+{\sword}, Clover was a good fit for the system as only the tail pointer of linked lists needed
 to be stored on the switch. Other data structures do not always exhibit this property. Log-based or
 append-only data structures have promise here, as the point of contention (the end of the log) can
 be managed with relatively little state. Future work could enable \textit{append-mostly} data
@@ -1152,7 +1146,6 @@ techniques and enable a shift towards mainstream disaggregated computing.
 % degrees to fit the page.)}}
 % \label{tab:facing}
 % \renewcommand\tabularxcolumn[1
-Writing objects: 100% (5/5), 642 bytes | 642.00 KiB/s, done.
 % \setbox0=\vbox{%
 % \vsize\textwidth
 % \hsize\textheight

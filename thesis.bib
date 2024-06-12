@@ -47,15 +47,6 @@
 	articleno    = 14,
 	numpages     = 16
 }
-@inproceedings{254120,
-	title        = {Disaggregation and the Application},
-	author       = {Sebastian Angel and Mihir Nanavati and Siddhartha Sen},
-	year         = 2020,
-	month        = {July},
-	booktitle    = {12th {USENIX} Workshop on Hot Topics in Cloud Computing (HotCloud 20)},
-	publisher    = {{USENIX} Association},
-	url          = {https://www.usenix.org/conference/hotcloud20/presentation/angel}
-}
 @misc{3po,
 	title        = {3PO: Programmed Far-Memory Prefetching for Oblivious Applications},
 	author       = {Christopher Branner-Augmon and Narek Galstyan and Sam Kumar and Emmanuel Amaro and Amy Ousterhout and Aurojit Panda and Sylvia Ratnasamy and Scott Shenker},
@@ -125,14 +116,15 @@
 	numpages     = 7
 }
 @inproceedings{bbn,
-	title        = {Black-box Concurrent Data Structures for NUMA Architectures},
+	title        = {Black-box Concurrent Data Structures for {NUMA} Architectures},
 	author       = {Calciu, Irina and Sen, Siddhartha and Balakrishnan, Mahesh and Aguilera, Marcos K.},
 	year         = 2017,
+	month = {April},
 	booktitle    = {Proceedings of the Twenty-Second International Conference on Architectural Support for Programming Languages and Operating Systems},
 	location     = {Xi'an, China},
 	publisher    = {Association for Computing Machinery},
 	address      = {New York, NY, USA},
-	series       = {ASPLOS '17},
+	series       = {(ASPLOS '17)},
 	pages        = {207–221},
 	doi          = {10.1145/3037697.3037721},
 	isbn         = 9781450344654,
@@ -231,11 +223,11 @@
 	title        = {Clio: A Hardware-Software Co-Designed Disaggregated Memory System},
 	author       = {Guo, Zhiyuan and Shan, Yizhou and Luo, Xuhao and Huang, Yutong and Zhang, Yiying},
 	year         = 2022,
+	month = {Feburary},
 	booktitle    = {Proceedings of the 27th ACM International Conference on Architectural Support for Programming Languages and Operating Systems},
-	location     = {Lausanne, Switzerland},
+	address     = {Lausanne, Switzerland},
 	publisher    = {Association for Computing Machinery},
-	address      = {New York, NY, USA},
-	series       = {ASPLOS '22},
+	series       = {(ASPLOS '22)},
 	pages        = {417–433},
 	doi          = {10.1145/3503222.3507762},
 	isbn         = 9781450392051,
@@ -243,14 +235,6 @@
 	abstract     = {Memory disaggregation has attracted great attention recently because of its benefits in efficient memory utilization and ease of management. So far, memory disaggregation research has all taken one of two approaches: building/emulating memory nodes using regular servers or building them using raw memory devices with no processing power. The former incurs higher monetary cost and faces tail latency and scalability limitations, while the latter introduces performance, security, and management problems. Server-based memory nodes and memory nodes with no processing power are two extreme approaches. We seek a sweet spot in the middle by proposing a hardware-based memory disaggregation solution that has the right amount of processing power at memory nodes. Furthermore, we take a clean-slate approach by starting from the requirements of memory disaggregation and designing a memory-disaggregation-native system. We built Clio, a disaggregated memory system that virtualizes, protects, and manages disaggregated memory at hardware-based memory nodes. The Clio hardware includes a new virtual memory system, a customized network system, and a framework for computation offloading. In building Clio, we not only co-design OS functionalities, hardware architecture, and the network system, but also co-design compute nodes and memory nodes. Our FPGA prototype of Clio demonstrates that each memory node can achieve 100&nbsp;Gbps throughput and an end-to-end latency of 2.5&nbsp;µ s at median and 3.2&nbsp;µ s at the 99th percentile. Clio also scales much better and has orders of magnitude lower tail latency than RDMA. It has 1.1\texttimes{} to 3.4\texttimes{} energy saving compared to CPU-based and SmartNIC-based disaggregated memory systems and is 2.7\texttimes{} faster than software-based SmartNIC solutions.},
 	keywords     = {FPGA, Resource Disaggregation, Virtual Memory, Hardware- Software Co-design},
 	numpages     = 17
-}
-@misc{clio-arxiv,
-	title        = {Clio: A Hardware-Software Co-Designed Disaggregated Memory System},
-	author       = {Zhiyuan Guo and Yizhou Shan and Xuhao Luo and Yutong Huang and Yiying Zhang},
-	year         = 2021,
-	archiveprefix = {arXiv},
-	eprint       = {2108.03492},
-	primaryclass = {cs.DC}
 }
 @inproceedings{cliquemap,
 	title        = {CliqueMap: Productionizing an {RMA-Based} Distributed Caching System},
@@ -413,27 +397,19 @@
 	author       = {Donghyun Gouk and Sangwon Lee and Miryeong Kwon and Myoungsoo Jung},
 	year         = 2022,
 	month        = {July},
-	booktitle    = {2022 USENIX Annual Technical Conference (USENIX ATC 22)},
+	booktitle    = {2022 USENIX Annual Technical Conference (ATC '22)},
 	publisher    = {USENIX Association},
 	address      = {Carlsbad, CA},
 	pages        = {287--294},
 	isbn         = {978-1-939133-29-65},
 	url          = {https://www.usenix.org/conference/atc22/presentation/gouk}
 }
-@inproceedings{dis-and-app,
-	title        = {Disaggregation and the Application},
-	author       = {Sebastian Angel and Mihir Nanavati and Siddhartha Sen},
-	year         = 2020,
-	month        = {July},
-	booktitle    = {12th {USENIX} Workshop on Hot Topics in Cloud Computing (HotCloud 20)},
-	publisher    = {{USENIX} Association},
-	url          = {https://www.usenix.org/conference/hotcloud20/presentation/angel}
-}
 @inproceedings{disandapp,
 	title        = {Disaggregation and the Application},
 	author       = {Sebastian Angel and Mihir Nanavati and Siddhartha Sen},
 	year         = 2020,
 	month        = {July},
+	address      = {held virtually online},
 	booktitle    = {12th {USENIX} Workshop on Hot Topics in Cloud Computing (HotCloud 20)},
 	publisher    = {{USENIX} Association},
 	url          = {https://www.usenix.org/conference/hotcloud20/presentation/angel}
@@ -585,11 +561,11 @@
 	title        = {Flat combining and the synchronization-parallelism tradeoff},
 	author       = {Hendler, Danny and Incze, Itai and Shavit, Nir and Tzafrir, Moran},
 	year         = 2010,
+	month = {June},
 	booktitle    = {Proceedings of the Twenty-Second Annual ACM Symposium on Parallelism in Algorithms and Architectures},
-	location     = {Thira, Santorini, Greece},
+	address     = {Thira, Santorini, Greece},
 	publisher    = {Association for Computing Machinery},
-	address      = {New York, NY, USA},
-	series       = {SPAA '10},
+	series       = {(SPAA '10)},
 	pages        = {355–364},
 	doi          = {10.1145/1810479.1810540},
 	isbn         = 9781450300797,
@@ -713,7 +689,8 @@
 	location     = {Arcachon, France},
 	publisher    = {Springer-Verlag},
 	address      = {Berlin, Heidelberg},
-	series       = {DISC '08},
+	series       = {(DISC '08)},
+	month = {September},
 	pages        = {350–364},
 	doi          = {10.1007/978-3-540-87779-0_24},
 	isbn         = 9783540877783,
@@ -754,10 +731,11 @@
 	title        = {Infiniband Specification},
 	author       = {{Infiniband Trade Association}},
 	year         = 2007,
-	howpublished = {https://www.afs.enea.it/asantoro/}
+	howpublished = {https://www.afs.enea.it/asantoro/},
+	month = {December}
 }
 @inproceedings{infiniswap,
-	title        = {Efficient Memory Disaggregation with Infiniswap},
+	title        = {Efficient Memory Disaggregation with {Infiniswap}},
 	author       = {Juncheng Gu and Youngmoon Lee and Yiwen Zhang and Mosharaf Chowdhury and Kang G. Shin},
 	year         = 2017,
 	month        = {March},
@@ -809,7 +787,8 @@
 	location     = {Virtual, USA},
 	publisher    = {Association for Computing Machinery},
 	address      = {New York, NY, USA},
-	series       = {ASPLOS '21},
+	series       = {(ASPLOS '21)},
+	month = {April},
 	pages        = {79–92},
 	doi          = {10.1145/3445814.3446713},
 	isbn         = 9781450383172,
@@ -1092,20 +1071,11 @@
 	keywords     = {Remote Memory Access, Connection Free, Congestion Control},
 	numpages     = 14
 }
-@inproceedings{p4-telem,
-	title        = {Using P4 and RDMA to collect telemetry data},
-	author       = {Beltman, Rutger and Knossen, Silke and Hill, Joseph and Grosso, Paola},
-	year         = 2020,
-	booktitle    = {2020 IEEE/ACM Innovating the Network for Data-Intensive Science (INDIS)},
-	volume       = {},
-	number       = {},
-	pages        = {1--9},
-	doi          = {10.1109/INDIS51933.2020.00006}
-}
 @article{p4telemetry,
-	title        = {Using P4 and RDMA to collect telemetry data},
+	title        = {Using {P4} and {RDMA} to collect telemetry data},
 	author       = {Rutger Beltman and Silke Knossen and Joseph Hill and Paola Grosso},
 	year         = 2020,
+	month = {Nov},
 	journal      = {2020 IEEE/ACM Innovating the Network for Data-Intensive Science (INDIS)},
 	pages        = {1--9}
 }
@@ -1132,13 +1102,15 @@
 	doi          = {10.14778/3067421.3067427}
 }
 @inproceedings{prism,
-	title        = {PRISM: Rethinking the RDMA Interface for Distributed Systems},
+	title        = {PRISM: Rethinking the {RDMA} Interface for Distributed Systems},
 	author       = {Dharanipragada, Sowmya and Joyner, Shannon and Burke, Matthew and Szekeres, Adriana and Nelson, Jacob and Zhang, Irene and Ports, Dan R. K.},
 	year         = 2021,
 	month        = {October},
-	booktitle    = {SOSP 2021},
+	booktitle = {Proceedings of the ACM SIGOPS 28th Symposium on Operating Systems Principles (SOSP '21)},
+	address = {Virtual Event, Germany},
 	url          = {https://www.microsoft.com/en-us/research/publication/prism-rethinking-the-rdma-interface-for-distributed-systems/},
-	abstract     = {Remote Direct Memory Access (RDMA) has been used to accelerate a variety of distributed systems, by providing low-latency, CPU-bypassing access to a remote host's memory. However, most of the distributed protocols used in these systems cannot easily be expressed in terms of the simple memory READs and WRITEs provided by RDMA. As a result, designers face a choice between introducing additional protocol complexity (e.g., additional round trips) or forgoing the benefits of RDMA entirely. This paper argues that an extension to the RDMA interface can resolve this dilemma. We introduce the PRISM interface, which extends the RDMA interface with four new primitives: indirection, allocation, enhanced compare-and-swap, and operation chaining. These increase the expressivity of the RDMA interface, while still being implementable using the same underlying hardware features. We show their utility by designing three new applications using PRISM primitives, that require little to no server-side CPU involvement: (1) PRISM-KV, a key-value store; (2) PRISM-RS a replicated block store; and (3) PRISM-TX, a distributed transaction protocol. Using a software-based implementation of the PRISM primitives, we show that these systems outperform prior RDMA-based equivalents.}
+	abstract     = {Remote Direct Memory Access (RDMA) has been used to accelerate a variety of distributed systems, by providing low-latency, CPU-bypassing access to a remote host's memory. However, most of the distributed protocols used in these systems cannot easily be expressed in terms of the simple memory READs and WRITEs provided by RDMA. As a result, designers face a choice between introducing additional protocol complexity (e.g., additional round trips) or forgoing the benefits of RDMA entirely. This paper argues that an extension to the RDMA interface can resolve this dilemma. We introduce the PRISM interface, which extends the RDMA interface with four new primitives: indirection, allocation, enhanced compare-and-swap, and operation chaining. These increase the expressivity of the RDMA interface, while still being implementable using the same underlying hardware features. We show their utility by designing three new applications using PRISM primitives, that require little to no server-side CPU involvement: (1) PRISM-KV, a key-value store; (2) PRISM-RS a replicated block store; and (3) PRISM-TX, a distributed transaction protocol. Using a software-based implementation of the PRISM primitives, we show that these systems outperform prior RDMA-based equivalents.},
+	publisher = {Association for Computing Machinery},
 }
 @inproceedings{r2p2,
 	title        = {{R2P2}: Making {RPCs} first-class datacenter citizens},
@@ -1219,18 +1191,6 @@
 	author       = {Marcos K. Aguilera and Nadav Amit and Irina Calciu and Xavier Deguillard and Jayneel Gandhi and Stanko Novakovi{\'c} and Arun Ramanathan and Pratap Subrahmanyam and Lalith Suresh and Kiran Tati and Rajesh Venkatasubramanian and Michael Wei},
 	year         = 2018,
 	month        = {July},
-	booktitle    = {2018 USENIX Annual Technical Conference (USENIX ATC 18)},
-	publisher    = {USENIX Association},
-	address      = {Boston, MA},
-	pages        = {775--787},
-	isbn         = {978-1-939133-01-4},
-	url          = {https://www.usenix.org/conference/atc18/presentation/aguilera}
-}
-@inproceedings{reigons,
-	title        = {Remote regions: a simple abstraction for remote memory},
-	author       = {Marcos K. Aguilera and Nadav Amit and Irina Calciu and Xavier Deguillard and Jayneel Gandhi and Stanko Novakovi{\'c} and Arun Ramanathan and Pratap Subrahmanyam and Lalith Suresh and Kiran Tati and Rajesh Venkatasubramanian and Michael Wei},
-	year         = 2018,
-	month        = {July},
 	booktitle    = {2018 {USENIX} Annual Technical Conference ({USENIX} {ATC} 18)},
 	publisher    = {{USENIX} Association},
 	address      = {Boston, MA},
@@ -1239,10 +1199,11 @@
 	url          = {https://www.usenix.org/conference/atc18/presentation/aguilera}
 }
 @inproceedings{reno,
-	title        = {Reno: An RDMA-Enabled, Non-Volatile Memory-Optimized Key-Value Store},
+	title        = {Reno: An {RDMA}-enabled, Non-Volatile Memory-Optimized Key-Value Store},
 	author       = {Huang, Rulin and Huang, Kaixin and Wang, Jingyu and Chen, Yuting},
 	year         = 2021,
-	booktitle    = {2021 IEEE 27th International Conference on Parallel and Distributed Systems (ICPADS)},
+	month = {December},
+	booktitle    = {2021 IEEE 27th International Conference on Parallel and Distributed Systems (ICPADS '21)},
 	volume       = {},
 	number       = {},
 	pages        = {466--473},
@@ -1253,29 +1214,12 @@
 	author       = {Peter X. Gao and Akshay Narayan and Sagar Karandikar and Joao Carreira and Sangjin Han and Rachit Agarwal and Sylvia Ratnasamy and Scott Shenker},
 	year         = 2016,
 	month        = {November},
-	booktitle    = {12th {USENIX} Symposium on Operating Systems Design and Implementation ({OSDI} 16)},
+	booktitle    = {12th {USENIX} Symposium on Operating Systems Design and Implementation ({OSDI} '16)},
 	publisher    = {{USENIX} Association},
 	address      = {Savannah, GA},
 	pages        = {249--264},
 	isbn         = {978-1-931971-33-1},
 	url          = {https://www.usenix.org/conference/osdi16/technical-sessions/presentation/gao}
-}
-@inproceedings{rethinking,
-	title        = {Rethinking Software Runtimes for Disaggregated Memory},
-	author       = {Calciu, Irina and Imran, M. Talha and Puddu, Ivan and Kashyap, Sanidhya and Maruf, Hasan Al and Mutlu, Onur and Kolli, Aasheesh},
-	year         = 2021,
-	booktitle    = {Proceedings of the 26th ACM International Conference on Architectural Support for Programming Languages and Operating Systems},
-	location     = {Virtual, USA},
-	publisher    = {Association for Computing Machinery},
-	address      = {New York, NY, USA},
-	series       = {ASPLOS 2021},
-	pages        = {79–92},
-	doi          = {10.1145/3445814.3446713},
-	isbn         = 9781450383172,
-	url          = {https://doi.org/10.1145/3445814.3446713},
-	abstract     = {Disaggregated memory can address resource provisioning inefficiencies in current datacenters. Multiple software runtimes for disaggregated memory have been proposed in an attempt to make disaggregated memory practical. These systems rely on the virtual memory subsystem to transparently offer disaggregated memory to applications using a local memory abstraction. Unfortunately, using virtual memory for disaggregation has multiple limitations, including high overhead that comes from the use of page faults to identify what data to fetch and cache locally, and high dirty data amplification that comes from the use of page-granularity for tracking changes to the cached data (4KB or higher).  In this paper, we propose a fundamentally new approach to designing software runtimes for disaggregated memory that addresses these limitations. Our main observation is that we can use cache coherence instead of virtual memory for tracking applications' memory accesses transparently, at cache-line granularity. This simple idea (1) eliminates page faults from the application critical path when accessing remote data, and (2) decouples the application memory access tracking from the virtual memory page size, enabling cache-line granularity dirty data tracking and eviction. Using this observation, we implemented a new software runtime for disaggregated memory that improves average memory access time by 1.7-5X and reduces dirty data amplification by 2-10X, compared to state-of-the-art systems.},
-	keywords     = {remote memory, disaggregated memory, cache coherence},
-	numpages     = 14
 }
 @misc{rfc3135,
 	title        = {{Performance Enhancing Proxies Intended to Mitigate Link-Related Degradations}},
@@ -1338,14 +1282,13 @@
 	year         = 2015
 }
 @inproceedings{scalerpc,
-	title        = {Scalable RDMA RPC on Reliable Connection with Efficient Resource Sharing},
+	title        = {Scalable {RDMA} {RPC} on Reliable Connection with Efficient Resource Sharing},
 	author       = {Chen, Youmin and Lu, Youyou and Shu, Jiwu},
 	year         = 2019,
 	booktitle    = {Proceedings of the Fourteenth EuroSys Conference 2019},
-	location     = {Dresden, Germany},
+	address     = {Dresden, Germany},
 	publisher    = {Association for Computing Machinery},
-	address      = {New York, NY, USA},
-	series       = {EuroSys '19},
+	series       = {(EuroSys '19)},
 	doi          = {10.1145/3302424.3303968},
 	isbn         = 9781450362818,
 	url          = {https://doi.org/10.1145/3302424.3303968},
@@ -1411,7 +1354,7 @@
 	address      = {New York, NY, USA}
 }
 @inproceedings{snoop,
-	title        = {Improving TCP/IP Performance over Wireless Networks},
+	title        = {Improving {TCP/IP} Performance over Wireless Networks},
 	author       = {Balakrishnan, Hari and Seshan, Srinivasan and Amir, Elan and Katz, Randy H.},
 	year         = 1995,
 	booktitle    = {Proceedings of the 1st Annual International Conference on Mobile Computing and Networking},
@@ -1479,6 +1422,7 @@
 	title = {P4 Language Specification},
 	author = {P4 Language Consortium},
 	year = 2017,
+	month = {Feb},
 	howpublished = {\url{https://p4.org/p4-spec/docs/P4-16-v1.1.0-spec.html}}
 }
 
@@ -1530,6 +1474,7 @@
 	title        = {Beyond Processor-centric Operating Systems},
 	author       = {Paolo Faraboschi and Kimberly Keeton and Tim Marsland and Dejan Milojicic},
 	year         = 2015,
+	month = {March},
 	booktitle    = {15th Workshop on Hot Topics in Operating Systems (HotOS {XV})},
 	publisher    = {{USENIX} Association},
 	address      = {Kartause Ittingen, Switzerland},
@@ -1629,17 +1574,18 @@
 	title        = {xxHash Extremely fast hash algorithm},
 	author       = {Yann Collet},
 	year         = 2023,
+	month = {Dec}
 	howpublished = {\url{https://xxhash.com/}}
 }
 @inproceedings{ycsb,
 	title        = {Benchmarking Cloud Serving Systems with {YCSB}},
 	author       = {Cooper, Brian F. and Silberstein, Adam and Tam, Erwin and Ramakrishnan, Raghu and Sears, Russell},
 	year         = 2010,
+	month = {June},
 	booktitle    = {Proceedings of the 1st ACM Symposium on Cloud Computing},
-	location     = {Indianapolis, Indiana, USA},
+	address     = {Indianapolis, Indiana, USA},
 	publisher    = {Association for Computing Machinery},
-	address      = {New York, NY, USA},
-	series       = {SoCC '10},
+	series       = {(SoCC '10)},
 	pages        = {143–154},
 	doi          = {10.1145/1807128.1807152},
 	isbn         = 9781450300360,
@@ -1735,11 +1681,10 @@ series = {SOSP '23}
 
 @inproceedings{fairnic,
 author = {Grant, Stewart and Yelam, Anil and Bland, Maxwell and Snoeren, Alex C.},
-title = {SmartNIC Performance Isolation with FairNIC: Programmable Networking for the Cloud},
+title = {{SmartNIC} Performance Isolation with {FairNIC}: Programmable Networking for the Cloud},
 year = {2020},
 isbn = {9781450379557},
 publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
 url = {https://doi.org/10.1145/3387514.3405895},
 doi = {10.1145/3387514.3405895},
 abstract = {Multiple vendors have recently released SmartNICs that provide both special-purpose accelerators and programmable processing cores that allow increasingly sophisticated packet processing tasks to be offloaded from general-purpose CPUs. Indeed, leading data-center operators have designed and deployed SmartNICs at scale to support both network virtualization and application-specific tasks. Unfortunately, cloud providers have not yet opened up the full power of these devices to tenants, as current runtimes do not provide adequate isolation between individual applications running on the SmartNICs themselves.We introduce FairNIC, a system to provide performance isolation between tenants utilizing the full capabilities of a commodity SoC SmartNIC. We implement FairNIC on Cavium LiquidIO 2360s and show that we are able to isolate not only typical packet processing, but also prevent MIPS-core cache pollution and fairly share access to fixed-function hardware accelerators. We use FairNIC to implement NIC-accelerated OVS and key/value store applications and show that they both can cohabitate on a single NIC using the same port, where the performance of each is unimpacted by other tenants. We argue that our results demonstrate the feasibility of sharing SmartNICs among virtual tenants, and motivate the development of appropriate security isolation mechanisms.},
@@ -1747,8 +1692,8 @@ booktitle = {Proceedings of the Annual Conference of the ACM Special Interest Gr
 pages = {681–693},
 numpages = {13},
 keywords = {performance isolation, cloud hosting, Network adapters},
-location = {Virtual Event, USA},
-series = {SIGCOMM '20}
+address = {Virtual Event, USA},
+series = {(SIGCOMM '20)}
 }
 
 @inproceedings {treadmarks,
@@ -1884,8 +1829,9 @@ note = {Selected as an IEEE Micro TopPick},
 @misc{dpdk,
    title={Data Plane Development Kit ({DPDK})},
    author={Linux Foundation},
-   year={2015},
-   url = {http://www.dpdk.org}
+   year={2024},
+   month={June},
+   howpublished = {http://www.dpdk.org}
 }
 
 @misc{bluefield,
@@ -1913,17 +1859,17 @@ note = {Selected as an IEEE Micro TopPick},
 author = {Guo, Zhiyuan and He, Zijian and Zhang, Yiying},
 title = {Mira: A Program-Behavior-Guided Far Memory System},
 year = {2023},
+month = {October},
 isbn = {9798400702297},
 publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
 url = {https://doi.org/10.1145/3600006.3613157},
 doi = {10.1145/3600006.3613157},
 abstract = {Far memory, where memory accesses are non-local, has become more popular in recent years as a solution to expand memory size and avoid memory stranding. Prior far memory systems have taken two approaches: transparently swap memory pages between local and far memory, and utilizing new programming models to explicitly move fine-grained data between local and far memory. The former requires no program changes but comes with performance penalty. The latter has potentially better performance but requires significant program changes.We propose a new far-memory approach by automatically inferring program behavior and efficiently utilizing it to improve application performance. With this idea, we build Mira. Mira utilizes program analysis results, profiled execution information, and system environments together to guide code compilation and system configurations for far memory. Our evaluation shows that Mira outperforms prior swap-based and programming-model-based systems by up to 18 times.},
 booktitle = {Proceedings of the 29th Symposium on Operating Systems Principles},
 pages = {692–708},
 numpages = {17},
-location = {<conf-loc>, <city>Koblenz</city>, <country>Germany</country>, </conf-loc>},
-series = {SOSP '23}
+address = {Koblenz, Germany},
+series = {(SOSP '23)}
 }
 
 
