@@ -180,25 +180,22 @@ pushing my limits, and Camille Moore for keeping me on my toes.
 % the vita environment. It is optional.
 \publications
 
-\noindent Deepak Bansal and Gerald DeGrace and Rishabh Tewari and Michal Zygmunt and James Grantham
-and Silvano Gai and Mario Baldi and Krishna Doddapaneni and Arun Selvarajan and Arunkumar Arumugam
-and Balakrishnan Raman and Avijit Gupta and Sachin Jain and Deven Jagasia and Evan Langlais and
-Pranjal Srivastava and Rishiraj Hazarika and Neeraj Motwani and Soumya Tiwari and Stewart Grant and
-Ranveer Chandra and Srikanth Kandula. 2023. Disaggregating Stateful Network Functions. In
-proceedings of 20th USENIX Symposium on Networked Systems Design and Implementation (NSDI 23).
-Usenix Association, Boston MA, USA, 1469--1487.
-https://www.usenix.org/conference/nsdi23/presentation/bansal \\
+\noindent Deepak Bansal, Gerald DeGrace, Rishabh Tewari, Michal Zygmunt, and James Grantham, Silvano
+Gai, Mario Baldi, Krishna Doddapaneni, Arun Selvarajan, Arunkumar Arumugam, Balakrishnan Raman,
+Avijit Gupta, Sachin Jain, Deven Jagasia, Evan Langlais, Pranjal Srivastava, Rishiraj Hazarika,
+Neeraj Motwani, Soumya Tiwari, Stewart Grant, Ranveer Chandra, and Srikanth Kandula . 2023.
+Disaggregating Stateful Network Functions. In proceedings of 20th USENIX Symposium on Networked
+Systems Design and Implementation (NSDI '23).  Usenix Association, Boston MA, USA, April 2018, 1469--1487. \\
 
 \noindent Stewart Grant, Anil Yelam, Maxwell Bland, and Alex C. Snoeren. 2020. SmartNIC Performance
 Isolation with FairNIC: Programmable Networking for the Cloud. In Proceedings of the Annual
 conference of the ACM Special Interest Group on Data Communication on the applications,
 technologies, architectures, and protocols for computer communication (SIGCOMM '20). Association for
-Computing Machinery, New York, NY, USA, 681–693. https://doi.org/10.1145/3387514.3405895 \\
+Computing Machinery, Virtual Event, August 2020, 681–693.\\
 
 \noindent Stewart Grant, Hendrik Cech, and Ivan Beschastnikh. 2018. Inferring and asserting
 distributed system invariants. In Proceedings of the 40th International Conference on Software
-Engineering (ICSE '18). Association for Computing Machinery, New York, NY, USA, 1149–1159.
-https://doi.org/10.1145/3180155.3180199 \\
+Engineering (ICSE '18). Association for Computing Machinery, Gothenberg, Sweden, July 2018, 1149–1159.\\
 
 
 % This puts in the FIELDS OF STUDY. Also inside vita and also
@@ -212,19 +209,20 @@ https://doi.org/10.1145/3180155.3180199 \\
 %%	
 Resource disaggregation proposes a next-generation architecture for data center resources. System
 components like compute, memory, storage, and accelerators are separated from one another by a fast
-network and composed dynamically into virtual servers when required. This paradigm promises tyo
+network and composed dynamically into virtual servers when required. This paradigm promises to
 dramatically improved resource utilization, scalability, and flexibility, but introduces substantial
 challenges in terms of performance and fault tolerance. Memory is among the most difficult resources
 to disaggregate. CPUs currently expect DRAM to have ultra low latency, high bandwidth, and to share it's
 failure domain. In particular increased latency from network round trips dramatically shifts the
 performance of existing shared data structures designed for local DRAM.
 
-In this dissertation I explore the challenges of sharing disaggregated memory with hundreds of CPU cores.
-First in {\sword} I present a system which utilizes a centralized programmable switch to cache data
-structure state and dramatically improve key-value workload performance. Second I present a new
-key-value store RCuckoo which is designed to leverage RDMA and reduce round trips when accessed by
-CPUs over a network. Both systems demonstrate significant performance improvements over the
-existing state of the art.
+In this dissertation I demonstrate the challenges of sharing disaggregated memory and show that
+programmable network devices can be used to significantly improved system performance. I present two
+systems: First {\sword} which utilizes a centralized programmable switch to cache data structure
+state and dramatically improve key-value workload performance. Second I present a new key-value
+store RCuckoo which is designed to leverage RDMA and reduce round trips when accessed by CPUs over a
+network. Both systems demonstrate significant performance improvements over the existing state of
+the art.
 
 \end{dissertationabstract}
 
@@ -239,7 +237,7 @@ existing state of the art.
 have argued for the simplicity of homogeneity over optimal performance, reasoning that carefully
 picked commodity hardware at a given price point would yield the best cost-performance tradeoffs and that the
 performance gains of next-generation hardware would quickly erase any benefits made by specializing
-servers due to frequency scaling~\cite{moore}.
+servers due to Dennard scaling~\cite{moore}.
 
 Since then, both Moore's law and Dennard scaling have slowed down dramatically. CPU clock speeds and
 memory density improvements have stagnated, leaving operators to fight tooth and claw to enjoy the
@@ -298,7 +296,7 @@ that storage device access latency is far higher than a network round trip. In t
 the opposite is true. Memory access latency is approximately 20 times lower than a network round
 trip (50-100ns), effectively making it a separate tier of memory when placed across a network. While
 there is ongoing research demonstrating the advantages of tracking cache lines over pages for remote
-memory~\cite{kona}, the cost of fully disaggregating all memory is deemed too high. A common
+memory~\cite{kona}, the cost of fully disaggregating all memory is deemed too high~\cite{legoos}. A common
 proposal for disaggregated memory is to have CPUs with a reasonably sized cache (e.g., 4GB) of DRAM
 attached to them, along with software to manage and reduce the cost of remote
 accesses~\cite{legoos}.
@@ -342,7 +340,7 @@ CPU, clients must enforce serialization amongst themselves.
 
 In the absence of a serialization mechanism close to memory, clients must rely on the only mechanism
 available in commodity systems: RDMA atomics. Throughout this dissertation, RDMA atomics will be
-demonstrated as the backbone of all shared disaggregated data structures. They take the form of two
+used as the backbone of all shared disaggregated data structures. They take the form of two
 operations: compare-and-swap (CAS) and fetch-and-add (FAA), which execute with the same semantics as
 their local counterparts but on the memory of a remote machine. While their semantics remain the
 same, their performance is dramatically different. As noted before, the cost of executing a remote
@@ -351,15 +349,15 @@ built with remote locks and leads to stale caches and poor performance for optim
 structures under contention~\cite{clover,sherman,fusee,race,rolex}.
 
 \begin{center}
-\textit{Data structures can be optimized for disaggregated memory by leveraging network programmability} \\
+\textit{Data structures can be optimized for disaggregated memory by leveraging network programmability.} \\
 \end{center}
 
 This thesis statement is the core of the work presented in this dissertation. The challenges listed
 above, while fundamental to the problem domain can be practically alleviated in a variety of ways by
-exploding modern network hardware. We provide evidence for the thesis statement above by addressing
+exploiting modern network hardware. We provide evidence for the thesis statement above by addressing
 the following two questions.
 %%
-\textit{Where and how should serialization occur?} The RDMA answer to these questions is "on the
+\textit{Where and how should serialization occur?} The default answer to these questions is "on the
 NIC" and "with RDMA atomic verbs." However, given the landscape of programmable in-network hardware,
 our options are flexible. At rack-scale, both TORs and NICs offer serialization points. The
 interface and mechanism for serialization can be customized using programmable hardware. For
@@ -371,29 +369,30 @@ clients~\cite{clio, supernic}.
 %%
 \textit{What data structures should be used?} Few data structures are currently designed for remote
 memory~\cite{clover,fusee,race,sherman,rolex,ditto}. While these systems resemble
-RDMA~\cite{pilaf,herd,cell} and NUMA~\cite{flat-combining,hopscotch,bbn} systems of the past, disaggregation
-requires special consideration for the network hardware it runs on. How can round trips and access
-latencies be reduced? What data structures are easy to build, and which are hard? These questions
-are a key focus of this dissertation.
+RDMA~\cite{pilaf,herd,cell} and NUMA~\cite{flat-combining,hopscotch,bbn} systems of the past,
+disaggregation requires special consideration for the network hardware it runs on. How can round
+trips and access latencies be reduced? What data structures are easy to build, and which are hard?
+These questions are a key focus of this dissertation.
 
 This dissertation explores the design of shared data structures in disaggregated memory systems. I
-introduce two systems, Sword and RCuckoo, which address the challenges of sharing and contending
-access to remote memory. Sword (Chapter~\ref{chap:swordbox}) adopts a middlebox approach to alleviate
-contention in shared data structures. Its key insight leverages the serialized view of traffic at
-rack-scale TORs, caching data structure state on a programmable switch. Additionally, I present
-RCuckoo (Chapter~\ref{chap:rcuckoo}), a fully disaggregated key-value store specifically designed to
-enhance key-value locality. RCuckoo utilizes locality-sensitive hashing to improve performance in
-reads, writes, locking, and fault recovery by minimizing round trips. Sword demonstrates significant
-improvements in both throughput (up to 30x) and tail latency (up to 300x), while RCuckoo meets or
-surpasses the performance of all state-of-the-art disaggregated key-value stores on small key-value
-pairs and outperforms other systems on read-mostly workloads.
+introduce two systems, {\sword} and RCuckoo, which address the challenges of sharing and contending
+access to remote memory. {\sword} (Chapter~\ref{chap:swordbox}) adopts a middlebox approach to
+alleviate contention in shared data structures. Its key insight leverages the serialized view of
+traffic at rack-scale TORs, caching data structure state on a programmable switch. Additionally, I
+present RCuckoo (Chapter~\ref{chap:rcuckoo}), a fully disaggregated key-value store specifically
+designed to enhance key-value locality. RCuckoo utilizes locality-sensitive hashing to improve
+performance in reads, writes, locking, and fault recovery by minimizing round trips. {\sword}
+demonstrates significant improvements in both throughput (up to 30x) and tail latency (up to 300x),
+while RCuckoo meets or surpasses the performance of all state-of-the-art disaggregated key-value
+stores on small key-value pairs and outperforms other systems on the most common data-center
+workloads~\cite{ycsb,facebook-memcached}.
 
 \end{dissertationintroduction}
 
 \chapter{Background}
 
 
-Disaggregated systems rely on a variety of state-of-the-art technologies. We begin this section by
+Disaggregated systems rely on a variety of state-of-the-art technologies. We begin this Chapter by
 describing disaggregation generally and technologies that enable it (Section~\ref{sec:disaggregation}). The
 disaggregated networks described in this dissertation are fast (100Gbps+) and rely heavily on
 one-sided RDMA operations. In Section~\ref{sec:rdma}, we describe RDMA, the connections which enable
@@ -410,7 +409,7 @@ adapted to remote memory.
 \label{sec:disaggregation}
 
 Disaggregation stems from shifting hardware trends, marking a paradigm shift within the systems
-community. Over decades, per-core access to memory has steadily declined. While CPU core counts have
+community. Over decades, per-core access to memory bandwidth and capacity has steadily declined~\cite{blade-server}. While CPU core counts have
 seen consistent increases, memory speeds and capacities have improved at a slower
 rate~\cite{micron-memorywall}. Consequently, CPU cores now have diminished access to memory
 bandwidth and capacity compared to a decade ago. With memory becoming an increasingly scarce
@@ -471,15 +470,15 @@ packet header, and dispatches the packet to the NIC. Conversely, with RDMA, the 
 application pre-registers a memory region with the NIC before sending data. When an application
 intends to transmit data from this region to a remote machine, it furnishes a pointer to the data,
 the data's size, the remote machine's address, and the NIC's intended action (verbs). The
-application initiates transmission by invoking a dedicated \textit{rdma send} operation. This
+application initiates transmission by invoking a dedicated \textit{RDMA send} operation. This
 operation, non-blocking in nature, signals the NIC to perform a direct memory access (DMA)
 operation, extracting the memory from the process's address space, assembling a packet on the NIC
 (inclusive of managing transport state), and transmitting directly to another machine. In the case
 of a write, the receiving NIC issues DMA to the remote machine's memory without engaging its CPU.
 
-While the aforementioned example provides a high-level portrayal of CPU bypass for RDMA writes, it's
-imperative to recognize that the RDMA protocol is inherently complex, featuring various connection
-types and verbs. The extant InfiniBand RDMA specification spans over 1,700
+While the aforementioned example provides a high-level portrayal of CPU bypass for RDMA writes, it
+is imperative to recognize that the RDMA protocol is inherently complex, featuring various
+connection types and verbs. The extant InfiniBand RDMA specification spans over 1,700
 pages~\cite{infiniband-spec}. Within this section, I briefly highlight the salient aspects of RDMA
 pertinent to this dissertation's objectives.
 
@@ -516,15 +515,27 @@ semantics is that system designers must be very careful with how they use RDMA. 
 on the same address as a write before waiting for the write to complete, the user must specify a
 fence flag in the read operation. Across QPs, the lack of ordering means that partially written data
 is visible to other QPs; a common tactic is to accompany writes with CRCs to enable the readers to
-verify the data's integrity. When serialization is required across QPs, the only available mechanism
+verify the data's integrity~\cite{pilaf,cell,clover,race}. When serialization is required across QPs, the only available mechanism
 are RDMA atomic operations.
 
 
 
 \subsection{RDMA Verbs on Mellanox NICs}
 
+\begin{figure}[t]
+  \includegraphics[width=0.99\textwidth]{fig/rdma_concur.pdf}
+  \vskip -0.5em
 
-While Remote Direct Memory Access (RDMA) is a generic protocol, the Network Interface Cards (NICs)
+    \caption{Achieved throughput of RDMA verbs across twenty queue
+      pairs on data-independent addresses as a function of request
+      concurrency.  When using atomic requests, ConnectX-5 NICs can
+      support approximately 2.7 MOPS per queue pair, up to about 55
+      MOPS in aggregate.}
+    \label{fig:rdma_concur}
+%      \vskip -0.5em
+\end{figure}
+
+While RDMA is a generic protocol, the Network Interface Cards (NICs)
 utilized throughout this dissertation are Mellanox ConnectX-5. These NICs implement the base
 specification of RDMA and also provide additional features outside the InfiniBand specification,
 which can be exploited for performance gains. In this section, I describe RDMA verbs and their
@@ -538,13 +549,21 @@ Figure~\ref{fig:rdma_concur} shows that the NICs in our testbed (100-Gbps NVIDIA
 capable of serving many tens of millions of RDMA operations per second (limited only by link speed),
 but CAS operations to remote server memory top out around 50 MOPS.
 
+\begin{figure}
+        \center
+        \includegraphics[width=0.80\linewidth]{fig/rdma_cas_throughput.pdf}
+        \caption{Compare-and-swap performance on device and main memory}
+        \label{fig:rdma-benchmarks-c}
+\end{figure}
+
 While atomic operations are limited to 64 bits, read and write message sizes are bounded only by the
-link Maximum Transmission Unit (MTU). Figure~\ref{fig:rdma_concur} shows that on our testbed, NIC-to-NIC
-round-trip times are similar for all message sizes less than about 128 bytes, and messages must
-exceed 1 KB before the latency of a single large operation exceeds two round-trip times of smaller
-ones. We leverage this observation in Chapter~\ref{chap:rcuckoo} by collapsing multiple small reads into a
-single larger one when appropriate. The optimal threshold trades off latency reduction against read
-amplification.
+link Maximum Transmission Unit (MTU). Figure~\ref{fig:rdma_concur} shows that on our testbed,
+NIC-to-NIC round-trip times are similar for all message sizes less than about 128 bytes, and
+messages must exceed 1 KB before the latency of a single large operation exceeds two round-trip
+times of smaller ones. We leverage this observation in Chapter~\ref{chap:rcuckoo} by collapsing
+multiple small reads into a single larger one when appropriate. The optimal threshold trades off
+latency reduction against the amplified bandwidth cost of performing larger reads (read
+amplification).
 
 Mellanox NICs include a small amount (256 KB in our case) of on-NIC memory that can be addressed by
 remote clients using RDMA operations \cite{device-memory}. Accesses to NIC memory avoid the need to
@@ -557,7 +576,7 @@ Chapter~\ref{chap:rcuckoo} illustrates the profound effect that utilizing NIC me
 structure performance in a disaggregated setting by using NIC memory specifically for high
 contention locking operations.
 
-\subsection{RDMA limitations}
+\subsection{RDMA Limitations}
 
 RDMA is a powerful technology; however, it has well-documented drawbacks that can make system design
 difficult and limit performance. One significant debate revolves around the limitations of the RDMA
@@ -566,7 +585,7 @@ into the control path, and data indirection like pointers necessitates a round t
 sender to resolve~\cite{prism}. As detailed in prior sections, atomic operations are slow and lead
 to performance bottlenecks~\cite{design-guidelines}.
 
-Of particular note is the difficulty in achieving global ordering across QPs. Even using fast NIC
+Of particular note is the difficulty in achieving global ordering across queue pairs (QP). Even using fast NIC
 memory for RDMA operations yields only a few million operations per second (around 10M). Using this
 technique to implement a global sequencer is orders of magnitude slower than a global sequencer
 implemented with two-sided verbs and an efficient RPC system (around 120M)~\cite{design-guidelines}.
@@ -602,18 +621,18 @@ as they can offer orders-of-magnitude performance improvements when deployed in 
 context~\cite{when-computer}, such as sequencing where it has shown to offer huge benefits for
 consensus~\cite{eris, nopaxos}. In this dissertation, we leverage the power of programmable switches
 to exactly this benefit to get fast in-network serialization for RDMA based data structures
-(Section~\ref{chap:swordbox}).
+(Chapter~\ref{chap:swordbox}).
 
 Most prior proposals for disaggregation consider rack-scale deployments where servers are
 partitioned into roles: compute, memory, and storage, all of which are interconnected by a
 top-of-rack switch~\cite{disandapp,the-machine,intel-rack,firebox,legoos}. The central role of the
 ToR in this architecture has not gone unnoticed, and researchers have observed that a programmable
-switch can offload a wide variety of traditional operating system
-services~\cite{disandapp,mind,netlock,netkv,netchain,netcache}. The constraints in each case are
-similar: programmable switches have limited memory and processing capabilities. If the computational
-task is too large packets must be recirculated adding additional latency and reducing aggregate
-bandwidth. Ideal applications for programmable switches use little memory, require minimal
-processing and deliver outsized performance benefit.
+switch can offload a wide variety of traditional operating system services
+~\cite{disandapp,netchain,netcache,mind,netlock,netkv}.  The constraints in each case are similar:
+programmable switches have limited memory and processing capabilities. If the computational task is
+too large packets must be recirculated adding additional latency and reducing aggregate bandwidth.
+Ideal applications for programmable switches use little memory, require minimal processing and
+deliver outsized performance benefit.
 
 Specifically, prior work has shown that programmable switches are able to provide rack-scale
 serialization at low cost~\cite{eris,nopaxos,when-computer}, manage
@@ -622,15 +641,12 @@ connection~\cite{tea}. Researchers have even used a programmable switch to imple
 memory controller including a unified TLB and cache for passive remote memory~\cite{mind}. Their
 approach is limited, however, by the resource constraints of the switch. Inspired by
 performance-enhancing TCP proxies of old~\cite{snoop,rfc3135}, we consider a slightly different
-design point where the authoritative state and control logic remain at the endpoints. In
-Chapter~\ref{chap:swordbox}, we show that a ToR can observe and, at times, selectively modify RDMA
-packets~\cite{switchml} in-flight to improve performance while preserving the
-semantics of the underlying RDMA connections.
+design point where the authoritative state and control logic remain at the endpoints. 
 
 In Chapter~\ref{chap:swordbox}, we will show that a programmable switch can be used to great effect
 in accelerating a shared RDMA based data structure by caching a small amount of data and modifying
-operations in flight to reduce (or entirely remove) contention. In the following section, I will
-describe data structures in disaggregated systems and prior work on NUMA based data structures.
+operations in flight to reduce (or entirely remove) contention. In the following section we describe
+data structures in disaggregated systems and prior work on NUMA based data structures.
 
 
 
@@ -642,11 +658,11 @@ describe data structures in disaggregated systems and prior work on NUMA based d
 The aforementioned trends and technologies have enabled disaggregated systems to become a reality. A
 common model for disaggregated memory is that the remote memory of another machine can be used as a
 swap space or as a remote cache rather than disk. In this model, applications are apportioned a
-partition of remote memory for their
-pages~\cite{infiniswap,fastswap,leap,blade-server,legoos,hydra}, objects~\cite{aifm,carbink}, or
-cache lines~\cite{kona}. These systems focus on improving performance by reducing the number of
-remote memory accesses that an application has to make. In general, this is done by identifying hot
-and cold memory, then prefetching and evicting data to reduce the number of faults to remote memory.
+partition of remote memory for their pages
+~\cite{fastswap,infiniswap,hydra,blade-server,leap,legoos}, objects~\cite{aifm,carbink}, or cache
+lines~\cite{kona}. These systems focus on improving performance by reducing the number of remote
+memory accesses that an application has to make. In general, this is done by identifying hot and
+cold memory, then prefetching and evicting data to reduce the number of faults to remote memory.
 Additionally, these systems focus on fault-tolerance by replicating or erasure coding memory across
 replicated memory servers~\cite{hydra}.
 
@@ -655,17 +671,17 @@ non-disaggregated systems like mmapping a shared page are not supported by these
 where shared access is supported using POSIX interfaces, performance is not considered to be a
 concern~\cite{regions}. Disaggregated systems that share efficiently, at the time of writing, are
 entirely custom-built data structures, the majority of which are key-value stores, transaction
-processors, or caches~\cite{clover, sherman, race, fusee, rolex, ford, ditto}. Each of these systems
-takes on a significant burden in terms of development. Most develop their own fault tolerance,
-replication, recovering, allocation, and serialization protocols. In nearly every case, the
-performance of these systems is determined by the techniques used to serialize writes on the index
-of the data structure.
+processors, or caches~\cite{rolex,fusee,ditto,clover,sherman,ford,race} . Each of these systems
+takes on a significant burden in terms of development. Most designers develop their own fault
+tolerance, replication, recovering, allocation, and serialization protocols. In nearly every case,
+the performance of these systems is determined by the techniques used to serialize writes on the
+index of the data structure.
 
 In this section I describe the challenges of building a shared data structure in disaggregated
 memory. Pointers and pointer chasing are expensive in disaggregated memory. I describe the tradeoffs
-of using pointer based structures vs dense structures in Section~\ref{sec:sparse-dense}, then we
-cover these same tradeoffs in the context of hash tables, and opportunistic vs lock based
-concurrency schemes.
+of using pointer-based structures (e.g. linked lists) vs dense structures (e.g. arrays) in
+Section~\ref{sec:sparse-dense}, finally we describe these same tradeoffs in the context of hash
+tables, and opportunistic vs lock based concurrency schemes.
 
 
 \subsection{Sparse vs Dense Data Structures}
@@ -698,7 +714,7 @@ combination of techniques for managing this tradeoff space.
 
 
 
-\begin{table}[h]
+\begin{table}[t]
 	%\begin{table}[h]
 		\centering
 		\caption{Cross section of systems and techniques. Full circles~{\fullcirc} imply that a system uses the category, ~{\halfcirc}  denotes when a
@@ -732,7 +748,7 @@ combination of techniques for managing this tradeoff space.
 		\label{tab:re-table}
 	\end{table} 
 
-Table~\ref{tab:re-table} is the result of a literature review on the state of the art for shared
+Table~\ref{tab:re-table} is the result of a literature review on the state-of-the-art for shared
 data structures. We noted a variety of techniques that cross-cut the systems we reviewed. Read
 inflation is a technique which takes advantage of data structure locality. Simply put, if a rough
 location of data is known, a big read can be issued to fetch a region containing the data. This
@@ -746,52 +762,57 @@ Sherman~\cite{sherman}, a write-optimized B+Tree, uses associative, rather than 
 reduce contention on writes.
 
 Due to the high cost of reading far memory, a common trait among these systems is to push complexity
-to the client. We classify this into three categories: pre-compute, metadata caching, and
-self-verifying. Pre-compute is the idea that additional work on the client can reduce the number of
-reads required in remote memory. As noted in the introduction, Clio~\cite{clio} uses a flat
-precomputed page-table, RACE uses a local power-of-two choices decision to reduce contention, and
-Sherman uses a local lock table to reduce remote contention. Each disaggregated system made use of
-some degree of metadata caching, where a component of the data structure's index is cached locally
-on the client to reduce the number of reads required to synchronize with the remote state. In nearly
-all cases, data structures are self-verifying, meaning that the data structure's integrity can be
-determined by a local calculation on the client. These are commonly CRC64s.
+to the client. We classify the act of pushing complexity to clients into three categories:
+pre-compute, metadata caching, and self-verifying. Pre-compute is the idea that additional work on
+the client can reduce the number of reads required in remote memory. As noted in the introduction,
+Clio~\cite{clio} uses a flat precomputed page-table, RACE uses a local power-of-two choices decision
+to reduce contention, and Sherman uses a local lock table to reduce remote contention. Each
+disaggregated system makes use of some degree of metadata caching, where a component of the data
+structure's index is cached locally on the client to reduce the number of reads required to
+synchronize with the remote state. In nearly all cases, data structures are self-verifying, meaning
+that the data structure's integrity can be determined by a local calculation on the client. These
+are commonly CRC64s~\cite{pilaf,cell,fusee,race}.
 
 The techniques used by these systems are largely the same as those used to design RDMA key-value
-stores for non-disaggregated memory over the past decade~\cite{pilaf,cell,herd,farm}. The primary
+stores for non-disaggregated memory over the past decade~\cite{farm,herd,pilaf,cell}. The primary
 difference is that disaggregated systems use exclusively one-sided RDMA operations, while RDMA
 key-value stores typically route write operations through a CPU to serialize requests.
 
-Despite the similarities between the two classes of systems, there is no agreement on if data
-structures should be optimistic or lock-based. In Chapter~\ref{chap:rcuckoo}, we design a lock-based
-hash table which merges the qualities of Cuckoo and Hopscotch hashing to improve locality and enable
-efficient precomputation. In Section~\ref{sec:lock-vs-op}, we describe how different disaggregated
-systems have used locks and optimistic concurrency, and in Section~\ref{sec:hashtables}, we describe
-the properties of Cuckoo and Hopscotch hashing. Our stance in Chapter~\ref{chap:swordbox} is that
-both locks and optimistic concurrency have their place in disaggregated systems, and that a
-middlebox can be used to accelerate both.
+Despite the similarities between the two classes of systems, there is no agreement on whether data
+structures should be optimistic or lock-based as each have distinct benefits. For instance some data
+structures require large critical sections which are more amenable to locks~\cite{hopscotch}, while
+others (such as linked lists) can have their critical sections reduced to a single pointer update
+with relative ease~\cite{clover}. In Chapter~\ref{chap:rcuckoo}, we design a lock-based hash table
+which merges the qualities of Cuckoo and Hopscotch hashing to improve locality and enable efficient
+precomputation. In Section~\ref{sec:lock-vs-op}, we describe how different disaggregated systems
+have used locks and optimistic concurrency, and in Section~\ref{sec:hashtables}, we describe the
+properties of Cuckoo and Hopscotch hashing. Our stance in Chapter~\ref{chap:swordbox} is that both
+locks and optimistic concurrency have their place in disaggregated systems, and that a middlebox can
+be used to accelerate both lock-based and optimistic approaches.
 
 
 
 \subsection{Hash Tables}
 \label{sec:hashtables}
 
-Fully disaggregated key-value stores are essentially concurrent hash tables whose conflict
-resolution strategy is implemented entirely by individual clients~\cite{rolex,fusee,race}. Like any
-hash table, the underlying hashing algorithm must have an approach to managing collisions. Cuckoo
-and hopscotch hashing are particularly attractive in this context because they both provide the
-property that the potential locations of an entry in the table, regardless of contention or
-collision, can be deterministically computed by clients based only upon the key itself. Moreover,
-the set of locations is limited. Hence, at least in theory, systems built around either cuckoo or
-hopscotch hashing hold the potential for single-round-trip reads.
+Fully disaggregated key-value stores are essentially concurrent hash tables whose
+conflict-resolution strategy is implemented entirely by individual clients~\cite{rolex,fusee,race}.
+Like any hash table, the underlying hashing algorithm must have an approach to managing collisions.
+Cuckoo and hopscotch hashing are particularly attractive in this context because they both provide
+the property that the potential locations of an entry in the table, regardless of contention or
+collision, can be deterministically computed by clients based only upon the key
+itself~\cite{farm,memc3,hopscotch,cuckoo-improvements,pilaf,cuckoo}. Moreover, the set of locations
+is limited. Hence, at least in theory, systems built around either cuckoo or hopscotch hashing hold
+the potential for single-round-trip reads.
 
-\textbf{Cuckoo hashing} uses independent hash functions to compute two potential table locations for
-a key, a primary and a secondary, where each location corresponds to an associative row of entries.
-A key is always inserted into its primary location. If that row is full, an existing key is evicted
-(or “cuckooed”) to its secondary row to make space. If the cuckooed entry’s secondary row is also
-full, the process iterates (by selecting yet another entry in the secondary row to cuckoo) until an
-open location is found. The path of evictions is known as a \textit{cuckoo path}. While insertions
-can be involved, reads can always be executed in a single round trip by reading the rows
-corresponding to both of a key’s locations simultaneously~\cite{pilaf}.
+\textbf{Cuckoo hashing} uses independent hash functions to compute two (or more) potential table
+locations for a key, a primary and a secondary, where each location corresponds to an associative
+row of entries.  A key is always inserted into its primary location. If that row is full, an
+existing key is evicted (or “cuckooed”) to its secondary row to make space. If the cuckooed entry’s
+secondary row is also full, the process iterates (by selecting yet another entry in the secondary
+row to cuckoo) until an open location is found. The path of evictions is known as a \textit{cuckoo
+path}. While insertions can be involved, reads can always be executed in a single round trip by
+reading the rows corresponding to both of a key’s locations simultaneously~\cite{pilaf}.
 
 \textbf{Hopscotch hashing} works in a similar fashion but provides a slightly different guarantee,
 namely that keys will be located within a bounded neighborhood. (While cuckoo hashing limits the
@@ -799,8 +820,10 @@ number of locations in which a key may be stored, it does not provide any locali
 regarding those locations.) It does so by finding the physically closest empty entry to the desired
 location and then, if that location is not within the neighborhood, iteratively moving other entries
 out of the way to make room for the new key. The hopscotch process is facilitated by maintaining a
-per-entry bitmask of nearby collisions. As with cuckoo hashing, clients can read in a single round
-trip by reading a key’s entire neighborhood at once.
+per-entry bitmask of nearby collisions. The entries are stored directly in the index at the location
+the entry hashes to, when updates are made during insertions or deletions the bitmask is updated to
+show that the collied entry has been inserted or removed. As with cuckoo hashing, clients can index
+entries in a hopscotch hash in a single round trip by reading a key’s entire neighborhood at once.
 
 The insert operation is expensive for both approaches, and prior systems have taken steps to
 mitigate its cost. In associative hashes like cuckoo hash tables, multiple entries can be chosen as
@@ -814,7 +837,6 @@ inserts begin to fail, known as the \emph{maximum fill factor}, is a function of
 locations and row associativity in cuckoo hashing and desired neighborhood size for hopscotch
 hashing.
 
-
 RCuckoo (Chapter~\ref{chap:rcuckoo}) uses cuckoo rather than hopscotch hashing due to locking
 concerns. First, each step of a cuckoo insert process requires one update—to the entry being moved
 to its secondary location—rather than two. When an entry is relocated in a hopscotch table, the
@@ -827,20 +849,25 @@ employs dependent hashing to increase the spatial locality of key locations, ena
 local caches to speculatively compute cuckoo paths.
 
 
-
 \subsection{Locks vs Optimistic Concurrency}
 \label{sec:lock-vs-op}
 
-\emph{Locks.} Sherman's B+ Tree~\cite{sherman} is augmented using entirely one-sided RDMA
-operations. Sherman improves performance under contention in two ways. First, it places locks for
-each node in the B+ Tree in a special region of NIC memory exposed by ConnectX-5 NICs. This small
-chunk of memory exposes the same RDMA interface as host memory but allows locking operations to
-execute with approximately 3$\times$ the throughput. Second, Sherman's clients employ a hierarchical
-locking scheme to reduce the contention for server-hosted locks. This client-local optimization
-significantly improves performance in cases where clients are collocated; \sword\ seeks to achieve
-similar efficiencies at the rack scale.
+Locks and optimistic approaches both provide mechanisms for managing concurrent access to shared
+data structures. Locks provide a critical section which is executed atomically by a single thread,
+while optimistic approaches allow multiple threads to execute concurrently and resolve conflicts at
+the end of the operation. Both have their own tradeoffs which lead to different performance and
+fault-tolerance characteristics in disaggregated memory.
 
-\emph{Optimistic concurrency.} Clover~\cite{clover}, RACE~\cite{race}, and a successor to RACE
+Sherman's B+ Tree~\cite{sherman} is augmented using entirely one-sided RDMA
+operations. Sherman improves performance under contention in two ways. First, it places locks for
+each node in the B+ Tree in a special region of NIC memory exposed by ConnectX-5 NICs. 
+% This small chunk of memory exposes the same RDMA interface as host memory but allows locking
+% operations to execute with approximately 3$\times$ the throughput.
+Second, Sherman's clients employ a hierarchical locking scheme to reduce the contention for
+server-hosted locks. This client-local optimization significantly improves performance in cases
+where clients are collocated; \sword\ seeks to achieve similar efficiencies at the rack scale.
+
+Clover~\cite{clover}, RACE~\cite{race}, and a successor to RACE
 called FUSEE~\cite{fusee} all use optimistic concurrency. They each support remote key-value stores
 through optimistic use of one-sided RDMA atomic operations and client-driven resolution protocols.
 In Clover, reads and writes for a given key are made to an append-only linked list stored in
@@ -891,7 +918,7 @@ RDMA key-value stores used mostly one-sided RDMA but still required a CPU to ser
 moment that the CPU was removed entirely, the 99th percentile tail latency jumped
 dramatically~\cite{clover}. One option we considered was to use a smartNIC to serialize writes
 rather than a CPU. Prior projects like Clio~\cite{clio}, SuperNIC~\cite{supernic}, and
-Prism~\cite{prism} suggested that network functions were a good fit for smartNICs and that they
+Prism~\cite{prism} suggested that network functions were a good fit for smartNICs and that the
 could be used to implement \textit{close to memory} operations like pointer chasing. While we
 agreed, individual NICs could not provide rack-scale coherence—in order to provide a rack-scale
 uniform memory machine, we would need to think about a mechanism which could provide a global total
@@ -909,7 +936,7 @@ memory system as a benchmark for future systems to compare to.
 % \input{swordbox/limitations}
 % \input{swordbox/conclusion}
 
-\section{The cost of programmable switches}
+\section{The Cost of Programmable Switches}
 
 As shown throughout its evaluation, \sword\ offers significant performance improvements over
 existing end-host solutions. The key insight behind \sword\ is that a small amount of
