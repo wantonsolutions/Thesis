@@ -894,7 +894,7 @@ of the end of each key's linked list to avoid traversals. By implementing a shar
 
 
 Proposals for disaggregated memory systems often forgo sharing entirely in favor of partitioned
-regions~\cite{infiniswap,fastswap,leap,legoos}. Each of these proposals cuts at a fundamental
+regions~\cite{fastswap,infiniswap,leap,legoos}. Each of these proposals cuts at a fundamental
 goal of remote memory, which is to increase capacity via pooling and reduce the need to increase CPU
 pin counts for increased memory bandwidth. The unfortunate result is that these systems do not meet
 the same expectations as local memory systems. For instance, any system requiring mmap with
@@ -907,25 +907,26 @@ One strategy to deal with the cost of synchronization is to simply have applicat
 resources rather than share them. On a large system hosting hundreds of VMs, the cost of duplicating
 shared libraries is known to be high, and deduplication among VMs is already common. Further, on
 monolithic servers, the explicit nature of message passing systems has been studied extensively, and
-extremely high performance can be achieved by using explicit remote accesses~\cite{herd, erpc}.
+extremely high performance can be achieved by using explicit remote accesses~\cite{erpc,herd}.
 Given these two factors, monolithic servers with well-designed RPC systems could potentially share
 more effectively and achieve better resource utilization than a naive disaggregated system which
 exposes a transparent but slow interface to remote memory or blindly replicates rather than sharing.
 
-The key motivation behind \sword\ is to provide an upper bound on the performance achievable by a
-disaggregated shared memory. We noticed while investigating shared remote memory that the fastest
-RDMA key-value stores used mostly one-sided RDMA but still required a CPU to serialize writes. The
-moment that the CPU was removed entirely, the 99th percentile tail latency jumped
-dramatically~\cite{clover}. One option we considered was to use a smartNIC to serialize writes
-rather than a CPU. Prior projects like Clio~\cite{clio}, SuperNIC~\cite{supernic}, and
-Prism~\cite{prism} suggested that network functions were a good fit for smartNICs and that the
-could be used to implement \textit{close to memory} operations like pointer chasing. While we
-agreed, individual NICs could not provide rack-scale coherence—in order to provide a rack-scale
-uniform memory machine, we would need to think about a mechanism which could provide a global total
-order to all operations. A programmable switch is an ideal candidate for this role as it sees all of
-the traffic in a rack and can enforce global ordering. Our goal in this project was to design a
-system that could provide a full upper bound on the performance achievable by a disaggregated shared
-memory system as a benchmark for future systems to compare to.
+The key motivation behind \sword\ is to demonstrate that a centralized in-network device can
+effectively remove contention and enable line-rate performance for  disaggregated shared memory. We
+noticed while investigating shared remote memory that the fastest RDMA key-value stores used mostly
+one-sided RDMA but still required a CPU to serialize writes. The moment that the CPU was removed
+entirely, the 99th percentile tail latency jumped dramatically~\cite{clover}. One option we
+considered was to use a smartNIC to serialize writes rather than a CPU. Prior projects like
+Clio~\cite{clio}, SuperNIC~\cite{supernic}, and Prism~\cite{prism} suggested that network functions
+were a good fit for smartNICs and that the could be used to implement \textit{close to memory}
+operations like pointer chasing. While we agreed, individual NICs could not provide rack-scale
+coherence—in order to provide a rack-scale uniform memory machine, we would need to think about a
+mechanism which could provide a global total order to all operations. A programmable switch is an
+ideal candidate for this role as it sees all of the traffic in a rack and can enforce global
+ordering. Our goal in this project was to design a system that could provide a full upper bound on
+the performance achievable by a disaggregated shared memory system as a benchmark for future systems
+to compare to.
 
 
 \input{swordbox/intro}
@@ -957,7 +958,7 @@ question: \textit{What other techniques can be used to improve the performance o
 structures?}.
 
 
-\chapter{Disaggregated Cuckoo Hashing}
+\chapter{Disaggregated Data Structure Design}
 \label{chap:rcuckoo}
 
 
@@ -965,14 +966,14 @@ structures?}.
 an existing data structure. But what if we could just make the data structure itself faster? In this
 chapter, we explore the design of a disaggregated key-value store, RCuckoo, which aims to answer
 exactly this question. Instead of adding a new piece of equipment to accelerate a data structure,
-RCuckoo aims to get better performance by co-designing itself with the network.
+with RCuckoo we aim to get better performance by co-designing itself with the network.
 
 There are a variety of data structure-specific optimizations that have been leveraged to improve the
 performance of disaggregated data structures.  Our position in this work is that locality-based
-optimizations are underutilized due to the high cost of round trips to remote memory and the fact
-that network capacity continues to grow at an astonishing rate. In this chapter, we make the case
-for locality-optimized cuckoo hashing and show how it can be used to improve performance, reduce
-contention, and make use of the latest trends in network hardware.
+optimizations can provide significant benefit due to the high cost of round trips to remote memory
+and the fact that network capacity continues to grow at an astonishing rate. In this chapter, we
+make the case for locality-optimized cuckoo hashing and show how it can be used to improve
+performance, reduce contention, and make use of the latest trends in network hardware.
 
 
 
@@ -990,6 +991,25 @@ contention, and make use of the latest trends in network hardware.
 
 % \section{Overview}
 % \todo{finish up you writeup for a fall submission of BBD and paste it her}
+
+\section{The Advantage of Locality}
+
+The key insight behind RCuckoo is that locality can be used to improve it's performance. Each aspect
+of it's design relies on it. Without locality spanning reads would span arbitrary ranges and consume
+unacceptable amounts of bandwidth. Lock acquisition, without locality, would involve random
+iterative reads throughout the table leading to many round trips and potential deadlock. Without
+locality the lock table may not easily fit into a linear block of NIC memory. And finally without
+locality the number of locks required for insertions would increase dramatically as the probability
+of a single lock spanning multiple relevant entries would significantly decrease. Locality enables
+us to take advantage of the fact that the network bandwidth is high and RDMA operations on linear
+regions of memory.
+
+In general RCuckoo is a demonstration of the power of locality in disaggregated systems, but it is
+far from the final word. While many aspects of it's design are specific to Cuckoo hashing the
+concept of reducing the number of round trips to perform an operation by increasing the likelihood
+that all relevant information lies within a given range is general property we expect would provide
+benefit many data structures.
+
 
 \chapter{Conclusion}
 
@@ -1024,9 +1044,9 @@ In this dissertation, we have contributed to the state of the art in disaggregat
 
 \begin{itemize}
     \item Demonstrating the significant performance gains achievable by using a programmable switch to cache the contended state of a data structure and resolve the conflicts in the network.
-    \item Showing that the instruction-level bottlenecks of RDMA atomic operations can be alleviated by using connection-based sequencing as an alternative serialization mechanism.
-    \item Analyzing disaggregated data structures and implementing locality-based RDMA optimizations for a disaggregated cuckoo hash.
-    \item Designing and implementing lock-based fault tolerance for a disaggregated cuckoo hash.
+    \item Showing that a programmable switch can reduce the instruction-level bottlenecks of RDMA atomic operations.
+    \item Demonstrating that through locality optimizations locks can be fit into a small amount of NIC memory.
+    \item Showing that RDMA-verbs are well suited for locality optimized data structures.
 \end{itemize}
 
 We believe that these contributions are significant stepping stones towards the design of future
