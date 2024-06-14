@@ -138,6 +138,15 @@ doubtful of success, nor more dangerous to handle, than to initiate a new order 
 % be repeated at the end of the relevant chapter.
 \begin{acknowledgements}
 
+Chapter~\ref{chap:swordbox} is a partial reprint of work submitted to multiple USENIX and ACM
+conferences under the title "SwordBox: Accelerating Shared Access in RDMA-based Disaggregated
+Memory. Stewart Grant, Alex C. Snoeren. This dissertations author was the primary investigator and
+author of this paper.
+%%
+Chapter~\ref{chap:rcuckoo} is a partial reprint of work submitted to multiple USENIX conferences
+under the title "Cuckoo for Clients: Disaggregated Cuckoo Hashing. Stewart Grant, Alex C. Snoeren.
+This dissertations author was the primary investigator and author of this paper.
+
 I would like to acknowledge my advisor Alex C. Snoeren for his dedication to his craft and guidance
 over the past 6 years. No piece of work within this dissertation would be possible without your
 collaboration. I would also like to thank my committee members Amy Ousterhout, Yiying Zhang, and
@@ -955,7 +964,23 @@ list needs to be cached to ensure the data structure's integrity. However, inser
 arbitrary location in the list would require the entire list to be stored in cache. Given these
 operational complexities, high cost of development, and data structure limitations, we ask the
 question: \textit{What other techniques can be used to improve the performance of disaggregated data
-structures?}.
+structures?}
+
+\section{Acknowledgement to {\sword} Contributors}
+
+Chapter~\ref{chap:swordbox} is a partial reprint of work submitted to multiple USENIX and ACM
+conferences under the title "SwordBox: Accelerating Shared Access in RDMA-based Disaggregated
+Memory. Stewart Grant, Alex C. Snoeren. This dissertations author was the primary investigator and
+author of this paper.
+
+Thank you to Alex C. Snoeren for his guidance and support throughout this project. Thank you to
+Rajdeep Das for his expertise in P4 and for supplying the initial P4 code and compiler configuration
+for our switch. Thank you to Anil Yelam for reviewing the figures and providing feedback on the
+initial draft of this work. Thank you to the reviewers at the \textit{Workshop on Resource
+Disaggregation and Serverless (WORDS '21)} for your feedback and revision notes on this work early
+in its development. Thank you to Geoffrey M. Voelker and Yiying Zhang for your feedback on this
+project.
+
 
 
 \chapter{Disaggregated Data Structure Design}
@@ -974,8 +999,6 @@ optimizations can provide significant benefit due to the high cost of round trip
 and the fact that network capacity continues to grow at an astonishing rate. In this chapter, we
 make the case for locality-optimized cuckoo hashing and show how it can be used to improve
 performance, reduce contention, and make use of the latest trends in network hardware.
-
-
 
 
 \input{rcuckoo/intro}
@@ -1009,6 +1032,21 @@ far from the final word. While many aspects of it's design are specific to Cucko
 concept of reducing the number of round trips to perform an operation by increasing the likelihood
 that all relevant information lies within a given range is general property we expect would provide
 benefit many data structures.
+
+\section{Acknowledgement to RCuckoo Contributors}
+
+Chapter~\ref{chap:rcuckoo} is a partial reprint of work submitted to multiple USENIX conferences
+under the title "Cuckoo for Clients: Disaggregated Cuckoo Hashing. Stewart Grant, Alex C. Snoeren.
+This dissertations author was the primary investigator and author of this paper.
+
+Thank you to Alex C. Snoeren for your tireless guidance and support throughout this work. Thank you
+to Dave Andersen for supplying an open source implementation of MemC3~\cite{memc3}, which was used
+as a reference for the search algorithm for RCuckoo. Thank you to Jiacheng Shen for our
+conversations at SOSP '23; without your confirmation that acquiring locks for a cuckoo hash
+\textit{was indeed hard} and that the progress we had made on the problem seemed promising, this
+work would not have been possible. Again, thank you to Anil Yelam for always providing feedback on
+the technical aspects of this project. Finally, thank you to Geoffrey M. Voelker for providing
+feedback on the initial draft of this work.
 
 
 \chapter{Conclusion}
